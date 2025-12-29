@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx,USE_HAL_DRIVER,ARM_MATH_CM4,__FPU_USED=1U,__FPU_PRESENT=1U,ARM_MATH_MATRIX_CHECK,ARM_MATH_ROUNDING,User_Debug</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../USB_DEVICE/App;../USB_DEVICE/Target;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../Middlewares/CMSIS/Core/Inc;../Middlewares/CMSIS/DSP/Inc/dsp;../Middlewares/CMSIS/DSP/Inc;../Middlewares/CMSIS/DSP/PrivateInclude;../User/Bsp/inc;../User/Algorithm/inc;../User/App/inc;../User/UI;../User/Start/Inc;../Middlewares/SEGGER_RTT/Config;../Middlewares/SEGGER_RTT/RTT</IncludePath>
+              <IncludePath>../Core/Inc;../USB_DEVICE/App;../USB_DEVICE/Target;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;../Middlewares/ST/STM32_USB_Device_Library/Core/Inc;../Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../Middlewares/CMSIS/Core/Inc;../Middlewares/CMSIS/DSP/Inc/dsp;../Middlewares/CMSIS/DSP/Inc;../Middlewares/CMSIS/DSP/PrivateInclude;../User/Bsp/inc;../User/Algorithm/inc;../User/App/inc;../User/UI;../User/Start/Inc;../Middlewares/SEGGER_RTT/Config;../Middlewares/SEGGER_RTT/RTT;..\User\Leg\inc</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1587,6 +1587,36 @@
               <FileName>ui_types.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\User\UI\ui_types.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Leg</GroupName>
+          <Files>
+            <File>
+              <FileName>chassisL.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\chassisL.c</FilePath>
+            </File>
+            <File>
+              <FileName>chassisR.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\chassisR.c</FilePath>
+            </File>
+            <File>
+              <FileName>mymath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\mymath.c</FilePath>
+            </File>
+            <File>
+              <FileName>observe.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\observe.c</FilePath>
+            </File>
+            <File>
+              <FileName>vmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\vmc.c</FilePath>
             </File>
           </Files>
         </Group>

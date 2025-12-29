@@ -128,25 +128,7 @@ void StartMoveTask(void const * argument)
         // move_C = chassis_task(&RUI_V_CONTAL,
         //                       &RUI_ROOT_STATUS, &User_data, &model,
         //                       &CAPDATE.GET, &ALL_MOTOR);
-        // mit_ctrl(&hcan1, 0x01, 0,0,0,0,0);
-        // mit_ctrl(&hcan1, 0x02, 0,0,0,0,0);
-        // mit_ctrl(&hcan1, 0x03, 0,0,0,0,0);
-        
-        // mit_ctrl(&hcan1, 0x04, 0,0,0,0,0.0f);
          osDelay(1);
-
-        // for (int i = 0; i < 10000; i++)
-        // {
-        //     motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
-        //     // osDelay(1);
-        //     motor_mode(&hcan1, LEG_LB+1, 0x000, 0xfc);
-        //     // osDelay(1);
-        //     motor_mode(&hcan1, LEG_RF+1, 0x000, 0xfc);
-        //      osDelay(1);
-        //     motor_mode(&hcan1, LEG_RB+1, 0x000, 0xfc);
-        //     osDelay(1);
-        // }
-        
     }
 }
 
@@ -158,25 +140,6 @@ void StartDefiantTask(void const * argument)
 
     for(;;)
     {
-        // static uint8_t temp = 1;
-        // static uint8_t init = 0;
-        // if (init == 0){
-        //     motor_mode(&hcan1, 0x01 + LEG_LF, 0x000, 0xfc);
-        //     motor_mode(&hcan1, 0x01 + LEG_LB, 0x000, 0xfc);
-        //     motor_mode(&hcan1, 0x01 + LEG_RB, 0x000, 0xfc);
-        //     motor_mode(&hcan1, 0x01 + LEG_RF, 0x000, 0xfc);
-        // }
-        // uint8_t count = 0;
-        // if (temp == 1){
-        //     mit_ctrl(&hcan1, 0x01, 0,0,0,0,0);
-        //     mit_ctrl(&hcan1, 0x03, 0,0,0,0,0);
-        //     temp = -temp;
-        // }
-        // else{
-        //     mit_ctrl(&hcan1, 0x02, 0,0,0,0,0);
-        //     mit_ctrl(&hcan1, 0x04, 0,0,0,0,0.0f);
-        //     temp = -temp;
-        // }
         osDelayUntil(&currentTimeDefiant, 1);
     }
 }

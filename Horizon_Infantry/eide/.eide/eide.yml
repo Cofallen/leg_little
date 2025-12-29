@@ -146,6 +146,8 @@ virtualFolder:
       folders:
         - name: STM32F4xx_HAL_Driver
           files:
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
+            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pcd_ex.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c
@@ -168,8 +170,6 @@ virtualFolder:
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_can.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_crc.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_spi.c
-            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c
-            - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c
             - path: ../Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c
           folders: []
         - name: CMSIS
@@ -254,6 +254,14 @@ virtualFolder:
         - path: ../User/UI/ui_interface.h
         - path: ../User/UI/ui_types.h
       folders: []
+    - name: Leg
+      files:
+        - path: ../User/Leg/chassisL.c
+        - path: ../User/Leg/chassisR.c
+        - path: ../User/Leg/mymath.c
+        - path: ../User/Leg/observe.c
+        - path: ../User/Leg/vmc.c
+      folders: []
 dependenceList: []
 outDir: build
 miscInfo:
@@ -295,6 +303,7 @@ targets:
         - ../User/Start/Inc
         - ../Middlewares/SEGGER_RTT/Config
         - ../Middlewares/SEGGER_RTT/RTT
+        - ../User/Leg/inc
         - .cmsis/include
         - ../MDK-ARM/RTE/_Horizon_Infantry
       libList: []
@@ -317,7 +326,7 @@ targets:
             language-cpp: c++03
             link-time-optimization: false
             one-elf-section-per-function: true
-            optimization: level-3
+            optimization: level-0
             short-enums#wchar: true
             warnings: ac5-like-warnings
           global:
