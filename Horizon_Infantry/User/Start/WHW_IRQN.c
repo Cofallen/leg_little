@@ -61,6 +61,9 @@
 
 #include "WHW_IRQN.h"
 #include "VOFA.h"
+#include "chassisL.h"
+#include "chassisR.h"
+#include "vmc.h"
 
 uint8_t move_G, move_S, move_C, move_P;
 float t1,t2,dt;
@@ -72,20 +75,8 @@ void StartRobotUITask(void const * argument)
     portTickType currentTimeRobotUI;
     currentTimeRobotUI = xTaskGetTickCount();
 
-    // //初始化UI界面
-    // RobotUI_Static_Init();
-
     for (;;)
     {
-        // RobotUI_Dynamic(RUI_ROOT_STATUS.RM_DBUS,
-        //                 RUI_V_CONTAL.SHOOT_Bask.Shoot_Number,
-        //                 IMU_Data.pitch,
-        //                 CAPDATE.GET.CAP_VOLT,
-        //                 ALL_MOTOR.DJI_3508_Shoot_M.DATA.Angle_now,
-        //                 ALL_MOTOR.DJI_3508_Shoot_L.DATA.Speed_now,
-        //                 ALL_MOTOR.DJI_3508_Shoot_R.DATA.Speed_now,
-        //                 &VisionRxData);
-
         osDelayUntil(&currentTimeRobotUI, 40);
     }
 }
@@ -96,38 +87,22 @@ void StartMoveTask(void const * argument)
     portTickType currentTimeMove;
     currentTimeMove = xTaskGetTickCount();
 
-    motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
-    osDelay(1);
-    motor_mode(&hcan1, LEG_LB+1, 0x000, 0xfc);
-    osDelay(1);
-    motor_mode(&hcan1, LEG_RF+1, 0x000, 0xfc);
-    osDelay(1);
-    motor_mode(&hcan1, LEG_RB+1, 0x000, 0xfc);
-    osDelay(1);
-
-    // //功率限制初始化
-    // Power_control_init(&model);
-
-    // //初始朝前的电机刻度
-    // RUI_V_CONTAL.CG.YAW_INIT_ANGLE = INIT_ANGLE;
-
-    // //Pitch轴限幅
-    // RUI_V_CONTAL.HEAD.Pitch_MAX = 2345;
-    // RUI_V_CONTAL.HEAD.Pitch_MIN = 2345;
+    ChassisL_Init();
+    ChassisR_Init();
+    Vmc_Init(&Leg_l, 0.08f);
+    Vmc_Init(&Leg_r, 0.08f);
 
     for (;;)
     {
         RUI_V_CONTAL.DWT_TIME.Move_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.Move_DWT_Count);
+        Vmc_calc(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        Vmc_calc(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
                        RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
                        RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
-                       0,0,0,0,0,0,0);
-        // /*底盘*/
-        // RobotTask(1, &WHW_V_DBUS, &RUI_V_CONTAL, &User_data,
-        //           &CAPDATE, &VisionRxData, &RUI_ROOT_STATUS);
-        // move_C = chassis_task(&RUI_V_CONTAL,
-        //                       &RUI_ROOT_STATUS, &User_data, &model,
-        //                       &CAPDATE.GET, &ALL_MOTOR);
+                       0,Leg_l.stateSpace.phi,Leg_l.stateSpace.dphi,Leg_l.vmc_Discreteness.Phi_1.diff_num,0,
+                       Leg_l.vmc_calc.L0[0],Leg_l.vmc_calc.phi0[0]);
+        
          osDelay(1);
     }
 }
@@ -245,7 +220,12 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan)
 		//CAN2
 		switch (can_rx.StdId)
 		{
-            
+            case LEG_WL:
+                RUI_F_MOTOR_CAN_RX_3508RM(&ALL_MOTOR.left_wheel.DATA, rx_data);
+                break;
+            case LEG_WR:
+                RUI_F_MOTOR_CAN_RX_3508RM(&ALL_MOTOR.right_wheel.DATA, rx_data);
+                break;
         }
 	}
 }

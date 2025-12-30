@@ -203,6 +203,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     if (temp == 1){
       mit_ctrl(&hcan1, 0x01, 0,0,0,0,0);
       mit_ctrl(&hcan1, 0x03, 0,0,0,0,0);
+      DJI_Current_Ctrl(&hcan2, 0x200, 0, 0, 0, 0);
       temp = -temp;
     }
     else{

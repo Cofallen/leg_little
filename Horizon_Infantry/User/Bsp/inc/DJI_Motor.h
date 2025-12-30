@@ -26,7 +26,7 @@ typedef struct
     int32_t Angle_Infinite;
     int64_t Stuck_Time;
     uint16_t Stuck_Flag[2];
-    int16_t Laps;
+    int32_t Laps;
     float Error;
     float Aim;
     float Aim_last;

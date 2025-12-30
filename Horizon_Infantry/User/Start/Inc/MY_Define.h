@@ -74,4 +74,8 @@
 #define LEG_RF  1
 #define LEG_RB  3
 
+#define LEG_WL  0x203
+#define LEG_WR  0x201
+
+
 #endif

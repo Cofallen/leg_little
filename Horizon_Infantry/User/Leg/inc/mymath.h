@@ -5,21 +5,15 @@
 
 typedef struct 
 {
-    struct 
-    {
-        float last_sum;
-        float sum_num;
-    }Sum;
-    struct 
-    {
-        float last_diff;
-        float diff_num;
-    }Diff;
+    float last_sum;
+    float sum_num;
+    float last_diff;
+    float diff_num;
     float dt;
 } Discreteness_TypeDef;
 
 void Discreteness_Init(Discreteness_TypeDef *object);
-void Discreteness_Sum(Discreteness_TypeDef *object, float input, float dt);
-void Discreteness_Diff(Discreteness_TypeDef *object, float input, float dt);
+float Discreteness_Sum(Discreteness_TypeDef *object, float input, float dt);
+float Discreteness_Diff(Discreteness_TypeDef *object, float input, float dt);
 
 #endif // !__MYMATH_H

@@ -54,11 +54,11 @@ void RUI_F_MOTOR_CAN_RX_3508RM(DJI_MOTOR_DATA_Typedef* DATA , uint8_t* can_data)
         DATA->Laps--;
     }
 
-    if ((DATA->Laps > 32500) | (DATA->Laps < -32500))
-    {
-        DATA->Laps = 0;
-        DATA->Aim  = DATA->Angle_now;
-    }
+    // if ((DATA->Laps > 32500) | (DATA->Laps < -32500))
+    // {
+    //     DATA->Laps = 0;
+    //     DATA->Aim  = DATA->Angle_now;
+    // }
 
     DATA->ONLINE_JUDGE_TIME = RUI_DF_MOTOR_OFFLINE_TIME;
 
