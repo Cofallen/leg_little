@@ -8,26 +8,13 @@ Leg_Typedef Leg_l;
 Leg_Typedef Leg_r;
 
 // #define MATH_PI 3.14159265358979323846f
-#define BANDENG_LENGTH 8.5f
 
-#define RADIUS_WHEEL   0.058f
-#define MASS_WHEEL     0.5f
-#define MASS_BODY     1.0f
-#define L1_LENGTH     0.105f
-#define L2_LENGTH     0.13f
-#define L3_LENGTH     0.13f
-#define L4_LENGTH     0.105f
-#define L5_LENGTH     0.0f
-
-#define POS 0
-#define VEL 1
-#define ACC 2
 
 void Vmc_Init(Leg_Typedef *object, float target_l0)
 {
-    object->vmc_Discreteness.L.last_diff = BANDENG_LENGTH; 
-    object->vmc_Discreteness.Phi_1.last_diff = PI;        // 零点
-    object->vmc_Discreteness.Phi_4.last_diff = 0;
+    object->Discreteness.L.last_diff = BANDENG_LENGTH; 
+    object->Discreteness.Phi_1.last_diff = PI;        // 零点
+    object->Discreteness.Phi_4.last_diff = 0;
 
     object->target.l0 = target_l0;
     object->target.roll = 0.0f;
@@ -43,21 +30,42 @@ void Vmc_Init(Leg_Typedef *object, float target_l0)
     PID_init(&object->pid.Delta, 0, Delta_control, 100.0f, 0.0f);
 }
 
-void Vmc_calc(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
+void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
 {
     // 基本状态获取
     // object->stateSpace.dphi = imu->gyro[0];  // 这个是什么，我算的是我的差分运算时对的，这个整体趋势对，不像角加速度
     object->stateSpace.phi = imu->pitch;        // 注意转弧度
-    object->stateSpace.dphi = Discreteness_Diff(&object->vmc_Discreteness.Phi_1, object->stateSpace.phi, dt);
+    object->stateSpace.dphi = Discreteness_Diff(&object->Discreteness.Phi_1, object->stateSpace.phi, dt);
     // 上面写错了，是状态变量更新函数
 
     // 左腿
     object->vmc_calc.phi1[POS] = PI - motor->left_front.DATA.pos;
     object->vmc_calc.phi4[POS] = 0  - motor->left_back.DATA.pos;
-
+    
     getPhi(&object->vmc_calc, object->vmc_calc.phi1[POS], object->vmc_calc.phi4[POS], L1_LENGTH, L2_LENGTH, L3_LENGTH, L4_LENGTH, L5_LENGTH);
+
+    object->vmc_calc.L0[VEL] = Discreteness_Diff(&object->Discreteness.L, object->vmc_calc.L0[POS], dt);
+    object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
 }
 
+
+void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
+{
+    // 基本状态获取
+    // object->stateSpace.dphi = imu->gyro[0];  // 这个是什么，我算的是我的差分运算时对的，这个整体趋势对，不像角加速度
+    object->stateSpace.phi = imu->pitch;        // 注意转弧度
+    object->stateSpace.dphi = Discreteness_Diff(&object->Discreteness.Phi_4, object->stateSpace.phi, dt);
+    // 上面写错了，是状态变量更新函数
+
+    // 右腿
+    object->vmc_calc.phi1[POS] = PI - motor->right_back.DATA.pos;      // 注意ID
+    object->vmc_calc.phi4[POS] = 0  - motor->right_front.DATA.pos;
+
+    getPhi(&object->vmc_calc, object->vmc_calc.phi1[POS], object->vmc_calc.phi4[POS], L1_LENGTH, L2_LENGTH, L3_LENGTH, L4_LENGTH, L5_LENGTH);
+
+    object->vmc_calc.L0[VEL] = Discreteness_Diff(&object->Discreteness.L, object->vmc_calc.L0[POS], dt);
+    object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
+}
 
 
 

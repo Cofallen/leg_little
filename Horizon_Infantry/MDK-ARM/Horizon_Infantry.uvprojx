@@ -1618,6 +1618,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\Leg\vmc.c</FilePath>
             </File>
+            <File>
+              <FileName>get_K.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\Leg\get_K.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

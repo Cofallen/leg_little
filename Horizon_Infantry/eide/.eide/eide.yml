@@ -261,6 +261,7 @@ virtualFolder:
         - path: ../User/Leg/mymath.c
         - path: ../User/Leg/observe.c
         - path: ../User/Leg/vmc.c
+        - path: ../User/Leg/get_K.c
       folders: []
 dependenceList: []
 outDir: build

@@ -8,6 +8,23 @@
 #include "Motors.h"
 #include "IMU_Task.h"
 
+#define BANDENG_LENGTH 0.09f
+
+#define RADIUS_WHEEL   0.06f
+#define MASS_WHEEL     0.572f         // +-   屁股0.117，加到轮上
+#define MASS_BODY     4.5f          // +-0.1
+#define L1_LENGTH     0.105f
+#define L2_LENGTH     0.125f
+#define L3_LENGTH     0.125f
+#define L4_LENGTH     0.105f
+#define L5_LENGTH     0.0f
+
+#define POS 0
+#define VEL 1
+#define ACC 2
+
+#define REDUCTION_RATIO 15.764705882352941176470588235294f   // 268/17
+
 typedef struct 
 {
     float phi0[3];
@@ -24,10 +41,12 @@ typedef struct
     {
         float theta;
         float dtheta;
+        float ddtheta;
         float s;
         float dot_s;
         float phi;
         float dphi;
+        float ddphi;
     }stateSpace;                          // 状态变量
     
     struct
@@ -48,8 +67,10 @@ typedef struct
         Discreteness_TypeDef D_L;     // vmc正解D_L  求解拟合杆加速度
         Discreteness_TypeDef Theta;   // vmc正解Theta 求解速度
         Discreteness_TypeDef dTheta;  // vmc正解dTheta 求解加速度
-        Discreteness_TypeDef Theta_w;     // 轮子差分 
-    }vmc_Discreteness;
+        Discreteness_TypeDef Phi;     // vmc正解Phi 
+        Discreteness_TypeDef Theta_w; // 轮子差分      求解角速度
+        Discreteness_TypeDef dS;      // 位移积分 
+    }Discreteness;
     
     struct 
     {
@@ -73,7 +94,8 @@ extern Leg_Typedef Leg_l;
 extern Leg_Typedef Leg_r;
 
 void Vmc_Init(Leg_Typedef *object, float target_l0);
-void Vmc_calc(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
+void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
+void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
 static void getPhi(vmc_Typedef *vmc, float phi1, float phi4, float l1, float l2, float l3, float l4, float l5);
 
 

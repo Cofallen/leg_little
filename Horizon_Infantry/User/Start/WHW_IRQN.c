@@ -95,15 +95,28 @@ void StartMoveTask(void const * argument)
     for (;;)
     {
         RUI_V_CONTAL.DWT_TIME.Move_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.Move_DWT_Count);
-        Vmc_calc(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
-        Vmc_calc(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        Vmc_calcL(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        Vmc_calcR(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        ChassisL_UpdateState(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        ChassisR_UpdateState(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        Chassis_UpdateStateS(&Leg_l, &Leg_r, &ALL_MOTOR, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+
+        // VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
+        //                RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
+        //                RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
+        //                0,Leg_l.stateSpace.phi,Leg_l.stateSpace.dphi,Leg_l.Discreteness.Phi_1.diff_num,0,
+        //                Leg_l.vmc_calc.L0[0],Leg_l.vmc_calc.phi0[0]);
         VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
-                       RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
                        RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
-                       0,Leg_l.stateSpace.phi,Leg_l.stateSpace.dphi,Leg_l.vmc_Discreteness.Phi_1.diff_num,0,
-                       Leg_l.vmc_calc.L0[0],Leg_l.vmc_calc.phi0[0]);
-        
-         osDelay(1);
+                       Leg_l.stateSpace.theta,
+                        Leg_l.stateSpace.dtheta,
+                        Leg_l.stateSpace.s,
+                        Leg_l.stateSpace.dot_s,
+                        Leg_l.stateSpace.phi,
+                        Leg_l.stateSpace.dphi,
+                        0,0);
+
+        osDelay(1);
     }
 }
 

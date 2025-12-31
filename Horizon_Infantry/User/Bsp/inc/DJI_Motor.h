@@ -31,6 +31,7 @@ typedef struct
     float Aim;
     float Aim_last;
     float dt;
+    int16_t Angle_Init;
 }DJI_MOTOR_DATA_Typedef;
 
 typedef struct
