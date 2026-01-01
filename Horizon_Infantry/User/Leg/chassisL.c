@@ -52,7 +52,7 @@ void Chassis_UpdateStateS(Leg_Typedef *Leg_l, Leg_Typedef *Leg_r, MOTOR_Typedef 
     Leg_l->stateSpace.s     = Discreteness_Sum(&Leg_l->Discreteness.dS, Leg_l->stateSpace.dot_s, dt);
     Leg_r->stateSpace.s     = Discreteness_Sum(&Leg_r->Discreteness.dS, Leg_r->stateSpace.dot_s, dt);
 
-    Leg_l->LQR.delta = Leg_r->stateSpace.theta - Leg_l->stateSpace.theta;
+    Leg_l->LQR.delta = Leg_r->stateSpace.theta + Leg_l->stateSpace.theta;
 }
 
 
@@ -96,7 +96,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) - object->LQR.dF_0 - object->LQR.dF_roll);
     // object->LQR.F_0 = 0;
     // pid修正
-    // object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
+    object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
     // object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
 
 
@@ -126,7 +126,7 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{

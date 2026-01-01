@@ -67,7 +67,7 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     // object->LQR.F_0 = - object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
-    // object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
+    object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
     // object->LQR.T_w = object->LQR.T_w + object->LQR.dF_yaw;
 
 
