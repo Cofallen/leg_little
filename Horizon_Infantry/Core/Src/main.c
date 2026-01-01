@@ -31,7 +31,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "All_Init.h"
+#include "chassisL.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -197,21 +197,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   /* USER CODE BEGIN Callback 1 */
   if (htim->Instance == TIM7) {
-    RUI_V_CONTAL.DWT_TIME.TIM7_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.TIM7_DWT_Count);
-    static uint8_t temp = 1;
-    uint8_t count = 0;
-    if (temp == 1){
-      mit_ctrl(&hcan1, 0x01, 0,0,0,0,0);
-      mit_ctrl(&hcan1, 0x03, 0,0,0,0,0);
-      DJI_Current_Ctrl(&hcan2, 0x200, 0, 0, 0, 0);
-      temp = -temp;
-    }
-    else{
-      mit_ctrl(&hcan1, 0x02, 0,0,0,0,0);
-      mit_ctrl(&hcan1, 0x04, 0,0,0,0,0.0f);
-      temp = -temp;
-    }
-    
+    Chassis_SendTorque();
   }
   /* USER CODE END Callback 1 */
 }

@@ -21,21 +21,19 @@ void Vmc_Init(Leg_Typedef *object, float target_l0)
     object->target.yaw = 0.0f;
     object->target.d2theta = 0.0f;
 
-    const float F0_control[3] = {100.0f, 0.0f, 200.0f};
+    const float F0_control[3] = {1500.0f, 0.0f, 3000.0f};
     const float Yaw_control[3] = {0.0f, 0.0f, 0.0f};
     const float Delta_control[3] = {0.0f, 0.0f, 0.0f};
 
-    PID_init(&object->pid.F0_l, 0, F0_control, 100.0f, 0.0f);
-    PID_init(&object->pid.Yaw, 0, Yaw_control, 100.0f, 0.0f);
-    PID_init(&object->pid.Delta, 0, Delta_control, 100.0f, 0.0f);
+    PID_init(&object->pid.F0_l, PID_POSITION, F0_control, 10.0f, 0.0f);
+    PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.0f, 0.0f);
+    PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 1.0f, 0.0f);
 }
 
 void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
 {
     // 基本状态获取
     // object->stateSpace.dphi = imu->gyro[0];  // 这个是什么，我算的是我的差分运算时对的，这个整体趋势对，不像角加速度
-    object->stateSpace.phi = imu->pitch;        // 注意转弧度
-    object->stateSpace.dphi = Discreteness_Diff(&object->Discreteness.Phi_1, object->stateSpace.phi, dt);
     // 上面写错了，是状态变量更新函数
 
     // 左腿
@@ -46,6 +44,8 @@ void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
 
     object->vmc_calc.L0[VEL] = Discreteness_Diff(&object->Discreteness.L, object->vmc_calc.L0[POS], dt);
     object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
+    
+    getMatJRM(&object->vmc_calc, object->vmc_calc.phi0[POS], object->vmc_calc.phi1[POS], object->vmc_calc.phi2[POS], object->vmc_calc.phi3[POS], object->vmc_calc.phi4[POS], object->vmc_calc.L0[POS], L1_LENGTH, L4_LENGTH);
 }
 
 
@@ -53,8 +53,6 @@ void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
 {
     // 基本状态获取
     // object->stateSpace.dphi = imu->gyro[0];  // 这个是什么，我算的是我的差分运算时对的，这个整体趋势对，不像角加速度
-    object->stateSpace.phi = imu->pitch;        // 注意转弧度
-    object->stateSpace.dphi = Discreteness_Diff(&object->Discreteness.Phi_4, object->stateSpace.phi, dt);
     // 上面写错了，是状态变量更新函数
 
     // 右腿
@@ -65,6 +63,8 @@ void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
 
     object->vmc_calc.L0[VEL] = Discreteness_Diff(&object->Discreteness.L, object->vmc_calc.L0[POS], dt);
     object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
+
+    getMatJRM(&object->vmc_calc, object->vmc_calc.phi0[POS], object->vmc_calc.phi1[POS], object->vmc_calc.phi2[POS], object->vmc_calc.phi3[POS], object->vmc_calc.phi4[POS], object->vmc_calc.L0[POS], L1_LENGTH, L4_LENGTH);
 }
 
 
@@ -95,4 +95,12 @@ static void getPhi(vmc_Typedef *vmc, float phi1, float phi4, float l1, float l2,
 
     vmc->L0[POS] = sqrtf((x_C * x_C) + (y_C * y_C));
     vmc->phi0[POS] = atan2f(y_C, x_C);
+}
+
+static void getMatJRM(vmc_Typedef *vmc, float phi0, float phi1, float phi2, float phi3, float phi4, float L0, float l1, float l4)
+{
+    vmc->JRM[0][0] = -l1 * arm_sin_f32(phi0 - phi3) * arm_sin_f32(phi1 - phi2) / arm_sin_f32(phi2 - phi3);
+    vmc->JRM[0][1] = -l1 * arm_sin_f32(phi1 - phi2) * arm_cos_f32(phi0 - phi3) / (L0 * arm_sin_f32(phi2 - phi3));
+    vmc->JRM[1][0] = -l4 * arm_sin_f32(phi0 - phi2) * arm_sin_f32(phi3 - phi4) / arm_sin_f32(phi2 - phi3);
+    vmc->JRM[1][1] = -l4 * arm_sin_f32(phi3 - phi4) * arm_cos_f32(phi0 - phi2) / (L0 * arm_sin_f32(phi2 - phi3));
 }

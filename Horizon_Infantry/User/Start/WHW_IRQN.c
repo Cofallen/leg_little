@@ -89,9 +89,14 @@ void StartMoveTask(void const * argument)
 
     ChassisL_Init();
     ChassisR_Init();
-    Vmc_Init(&Leg_l, 0.08f);
-    Vmc_Init(&Leg_r, 0.08f);
+    Vmc_Init(&Leg_l, 0.11f);
+    Vmc_Init(&Leg_r, 0.11f);
 
+    while (IMU_Data.pitch == 0.0f)
+    {
+        osDelay(1);
+    }
+    osDelay(3000); // 等待IMU数据稳定
     for (;;)
     {
         RUI_V_CONTAL.DWT_TIME.Move_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.Move_DWT_Count);
@@ -100,7 +105,8 @@ void StartMoveTask(void const * argument)
         ChassisL_UpdateState(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         ChassisR_UpdateState(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Chassis_UpdateStateS(&Leg_l, &Leg_r, &ALL_MOTOR, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
-
+        ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data);
+        ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data);
         // VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
         //                RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
         //                RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
@@ -109,12 +115,11 @@ void StartMoveTask(void const * argument)
         VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
                        RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
                        Leg_l.stateSpace.theta,
-                        Leg_l.stateSpace.dtheta,
                         Leg_l.stateSpace.s,
-                        Leg_l.stateSpace.dot_s,
                         Leg_l.stateSpace.phi,
-                        Leg_l.stateSpace.dphi,
-                        0,0);
+                        Leg_r.stateSpace.theta,
+                        Leg_r.stateSpace.s,
+                        Leg_r.stateSpace.phi, Leg_l.LQR.torque_setW, Leg_r.LQR.torque_setW);
 
         osDelay(1);
     }

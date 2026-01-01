@@ -1,4 +1,5 @@
 #include "mymath.h"
+#include "Motors.h"
 
 void Discreteness_Init(Discreteness_TypeDef *object)
 {
@@ -24,4 +25,26 @@ float Discreteness_Diff(Discreteness_TypeDef *object, float input, float dt)
     object->diff_num = (input - object->last_diff) / object->dt;
     object->last_diff = input;
     return object->diff_num;
+}
+
+#define TUEQUE2NUM 2730.6666666666666666666666666667f
+void DJI_Torque_Control(hcan_t* hcan, uint16_t stdid, float t1, float t2, float t3, float t4)
+{
+    uint8_t Data[8];
+
+    int16_t num1, num2, num3, num4;
+    num1 = (int16_t)(t1 * TUEQUE2NUM );
+    num2 = (int16_t)(t2 * TUEQUE2NUM );
+    num3 = (int16_t)(t3 * TUEQUE2NUM );
+    num4 = (int16_t)(t4 * TUEQUE2NUM );
+    Data[0] = ((num1) >> 8);
+    Data[1] = (num1);
+    Data[2] = ((num2) >> 8);
+    Data[3] = (num2);
+    Data[4] = ((num3) >> 8);
+    Data[5] = (num3);
+    Data[6] = ((num4) >> 8);
+    Data[7] = (num4);
+
+    canx_send_data(hcan, stdid, Data);
 }

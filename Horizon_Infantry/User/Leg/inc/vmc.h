@@ -23,6 +23,11 @@
 #define VEL 1
 #define ACC 2
 
+#define MAX_TORQUE_LEG_T 2.0f
+#define MIN_TORQUE_LEG_T -2.0f
+#define MAX_TORQUE_LEG_W 3.0f
+#define MIN_TORQUE_LEG_W -3.0f
+
 #define REDUCTION_RATIO 15.764705882352941176470588235294f   // 268/17
 
 typedef struct 
@@ -33,6 +38,7 @@ typedef struct
     float phi2[3];
     float phi3[3];
     float phi4[3];
+    float JRM[2][2];            // 雅可比矩阵
 }vmc_Typedef;                   // vmc正解计算中间变量
 
 typedef struct 
@@ -55,6 +61,13 @@ typedef struct
         float roll;                   // roll 补偿
         float yaw;                    // 转向控制
         float d2theta;                // 目标劈叉角度
+
+        float theta;
+        float dtheta;
+        float s;
+        float dot_s;
+        float phi;
+        float dphi;
     }target;
 
     vmc_Typedef vmc_calc;
@@ -76,7 +89,8 @@ typedef struct
     {
         pid_type_def F0_l;
         pid_type_def Yaw;
-        pid_type_def Delta;
+        pid_type_def Delta;             // 防劈叉
+        pid_type_def Roll;              // roll 补偿
     }pid;
 
     struct 
@@ -86,6 +100,22 @@ typedef struct
         uint8_t stand;
         uint8_t crouch;
     }status;
+
+    struct 
+    {
+        float K[12];
+        float T_p;
+        float T_w;
+        float delta;            // 劈叉角度
+        float dF_0;             // 伸腿力
+        float dF_roll;          // roll 补偿
+        float dF_delta;         // 防劈叉
+        float dF_yaw;           // 转向控制
+        float F_0;              // 支持力
+        float torque_setT[2];
+        float torque_setW;
+    }LQR;
+    
     
 }Leg_Typedef;
 
@@ -97,6 +127,7 @@ void Vmc_Init(Leg_Typedef *object, float target_l0);
 void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
 void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
 static void getPhi(vmc_Typedef *vmc, float phi1, float phi4, float l1, float l2, float l3, float l4, float l5);
+static void getMatJRM(vmc_Typedef *vmc, float phi0, float phi1, float phi2, float phi3, float phi4, float L0, float l1, float l4);
 
 
 #endif // !__VMC_H
