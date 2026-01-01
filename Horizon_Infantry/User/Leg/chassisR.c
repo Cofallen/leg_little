@@ -17,9 +17,9 @@ void ChassisR_Init(void)
 void ChassisR_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
 {
     // 更新状态
-    object->stateSpace.theta = (-PI / 2.0f + object->vmc_calc.phi0[POS] + imu->pitch /  57.3f);
+    object->stateSpace.theta = -(-PI / 2.0f + object->vmc_calc.phi0[POS] + imu->pitch /  57.3f);
     object->stateSpace.dtheta = Discreteness_Diff(&object->Discreteness.Theta, object->stateSpace.theta, dt);
-    object->stateSpace.phi = imu->pitch / 57.3f;
+    object->stateSpace.phi = -imu->pitch / 57.3f;
     object->stateSpace.dphi = Discreteness_Diff(&object->Discreteness.Phi, object->stateSpace.phi, dt);
 
     object->stateSpace.ddtheta = Discreteness_Diff(&object->Discreteness.dTheta, object->stateSpace.dtheta, dt);
@@ -63,7 +63,8 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     PID_calc(&object->pid.Delta, 0, object->target.d2theta);
     object->LQR.dF_delta = object->pid.Delta.out;
 
-    object->LQR.F_0 = MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 - object->LQR.dF_roll;
+    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) - object->LQR.dF_0 - object->LQR.dF_roll);
+    // object->LQR.F_0 = - object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
     // object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
