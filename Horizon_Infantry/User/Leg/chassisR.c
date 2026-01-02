@@ -39,6 +39,8 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->target.s = Discreteness_Sum(&object->Discreteness.target_s, object->target.dot_s, dt);
     object->target.phi = 0.0f;
     object->target.dphi = 0.0f;
+    object->target.yaw = (float)dbus->Remote.CH2_int16 / 6000.0f;
+    object->target.l0 += (float)dbus->Remote.CH3_int16 / 660000.0f; 
 
     object->LQR.T_w = (ChassisR_LQR_K[0] * (object->stateSpace.theta - object->target.theta) +
                      ChassisR_LQR_K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
@@ -63,12 +65,15 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     PID_calc(&object->pid.Delta, object->LQR.delta, object->target.d2theta);
     object->LQR.dF_delta = object->pid.Delta.out;
 
+    PID_calc(&object->pid.Yaw, imu->YawTotalAngle / 57.3f, object->target.yaw);
+    object->LQR.dF_yaw = object->pid.Yaw.out;
+
     object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 - object->LQR.dF_roll);
     // object->LQR.F_0 = object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
     object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
-    object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
+    object->LQR.T_w = object->LQR.T_w + object->LQR.dF_yaw;
 
 
     object->LQR.torque_setT[0] = object->vmc_calc.JRM[0][0] * object->LQR.F_0 + \
