@@ -87,6 +87,7 @@ void StartMoveTask(void const * argument)
     portTickType currentTimeMove;
     currentTimeMove = xTaskGetTickCount();
 
+    osDelay(10000);
     ChassisL_Init();
     ChassisR_Init();
     Vmc_Init(&Leg_l, 0.11f);
@@ -105,8 +106,8 @@ void StartMoveTask(void const * argument)
         ChassisL_UpdateState(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         ChassisR_UpdateState(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Chassis_UpdateStateS(&Leg_l, &Leg_r, &ALL_MOTOR, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
-        ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data);
-        ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data);
+        ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         // VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
         //                RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
         //                RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,

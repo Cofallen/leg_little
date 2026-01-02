@@ -83,6 +83,7 @@ typedef struct
         Discreteness_TypeDef Phi;     // vmc正解Phi 
         Discreteness_TypeDef Theta_w; // 轮子差分      求解角速度
         Discreteness_TypeDef dS;      // 位移积分 
+        Discreteness_TypeDef target_s;// 目标位置
     }Discreteness;
     
     struct 

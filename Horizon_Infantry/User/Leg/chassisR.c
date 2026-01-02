@@ -27,7 +27,7 @@ void ChassisR_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t 
 
 
 
-void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
+void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, float dt)
 {
     memcpy(object->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
     
@@ -35,8 +35,8 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     object->target.theta = 0.0f;
     // object->target.theta = -0.008f;
     object->target.dtheta = 0.0f;
-    object->target.s = 0.0f;
     object->target.dot_s = (float)dbus->Remote.CH1_int16 / 600.0f;
+    object->target.s = Discreteness_Sum(&object->Discreteness.target_s, object->target.dot_s, dt);
     object->target.phi = 0.0f;
     object->target.dphi = 0.0f;
 
