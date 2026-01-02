@@ -88,7 +88,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     object->LQR.dF_0 = object->pid.F0_l.out;
 
     PID_calc(&object->pid.Roll, imu->roll / 57.3f, object->target.roll);
-    // object->LQR.dF_roll = object->pid.Roll.out;
+    object->LQR.dF_roll = object->pid.Roll.out;
 
     PID_calc(&object->pid.Delta, object->LQR.delta, object->target.d2theta);
     object->LQR.dF_delta = object->pid.Delta.out;
@@ -98,6 +98,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     // object->LQR.F_0 = 0;
     // pid修正
     object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
+    // object->LQR.T_p = object->LQR.T_p + object->LQR.dF_roll;
     // object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
 
 

@@ -56,16 +56,15 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
 
     PID_calc(&object->pid.F0_l, object->vmc_calc.L0[POS], object->target.l0);
     object->LQR.dF_0 = object->pid.F0_l.out;
-    object->LQR.dF_0 = 0;
 
     PID_calc(&object->pid.Roll, imu->roll / 57.3f, object->target.roll);
-    // object->LQR.dF_roll = object->pid.Roll.out;
+    object->LQR.dF_roll = object->pid.Roll.out;
 
     PID_calc(&object->pid.Delta, object->LQR.delta, object->target.d2theta);
     object->LQR.dF_delta = object->pid.Delta.out;
 
-    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) - object->LQR.dF_0 - object->LQR.dF_roll);
-    // object->LQR.F_0 = - object->LQR.dF_0 - object->LQR.dF_roll;
+    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 + object->LQR.dF_roll);
+    // object->LQR.F_0 = object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
     object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
