@@ -94,7 +94,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
     object->LQR.dF_delta = object->pid.Delta.out;
 
     // object->LQR.F_0 = -(object->LQR.dF_0 - object->LQR.dF_roll);
-    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 - object->LQR.dF_roll);
+    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 + object->LQR.dF_roll);
     // object->LQR.F_0 = 0;
     // pid修正
     object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
