@@ -52,7 +52,8 @@ void Chassis_UpdateStateS(Leg_Typedef *Leg_l, Leg_Typedef *Leg_r, MOTOR_Typedef 
     Leg_l->stateSpace.s     = Discreteness_Sum(&Leg_l->Discreteness.dS, Leg_l->stateSpace.dot_s, dt);
     Leg_r->stateSpace.s     = Discreteness_Sum(&Leg_r->Discreteness.dS, Leg_r->stateSpace.dot_s, dt);
 
-    Leg_l->LQR.delta = Leg_r->stateSpace.theta + Leg_l->stateSpace.theta;
+    Leg_l->LQR.delta = Leg_r->stateSpace.theta - Leg_l->stateSpace.theta;
+    Leg_r->LQR.delta = Leg_r->stateSpace.theta - Leg_l->stateSpace.theta;
 }
 
 
@@ -83,20 +84,20 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu)
                       ChassisL_LQR_K[10] * (object->stateSpace.phi - object->target.phi) +
                       ChassisL_LQR_K[11] * (object->stateSpace.dphi - object->target.dphi));
 
-    PID_calc(&object->pid.F0_l, object->target.l0, object->vmc_calc.L0[POS]);
+    PID_calc(&object->pid.F0_l, object->vmc_calc.L0[POS], object->target.l0);
     object->LQR.dF_0 = object->pid.F0_l.out;
 
-    PID_calc(&object->pid.Roll, object->target.roll, imu->roll / 57.3f);
-    object->LQR.dF_roll = object->pid.Roll.out;
+    PID_calc(&object->pid.Roll, imu->roll / 57.3f, object->target.roll);
+    // object->LQR.dF_roll = object->pid.Roll.out;
 
-    PID_calc(&object->pid.Delta, object->target.d2theta, object->LQR.delta);
+    PID_calc(&object->pid.Delta, object->LQR.delta, object->target.d2theta);
     object->LQR.dF_delta = object->pid.Delta.out;
 
-    object->LQR.F_0 = -(object->LQR.dF_0 - object->LQR.dF_roll);
-    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) - object->LQR.dF_0 - object->LQR.dF_roll);
+    // object->LQR.F_0 = -(object->LQR.dF_0 - object->LQR.dF_roll);
+    object->LQR.F_0 = (MASS_BODY / 2.0f * 9.81f / arm_cos_f32(object->stateSpace.theta) + object->LQR.dF_0 - object->LQR.dF_roll);
     // object->LQR.F_0 = 0;
     // pid修正
-    // object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
+    object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
     // object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
 
 
@@ -126,12 +127,12 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{
-      mit_ctrl(&hcan1, 0x02, 0,0,0,0, -Leg_r.LQR.torque_setT[0]);
-      mit_ctrl(&hcan1, 0x04, 0,0,0,0, -Leg_r.LQR.torque_setT[1]);
+      mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.LQR.torque_setT[0]);
+      mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.LQR.torque_setT[1]);
       // mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
       // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;

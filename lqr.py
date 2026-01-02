@@ -117,8 +117,8 @@ def get_k(leg_length):
     # 8. LQR 求解
     # Q = np.diag([1000, 1, 100, 1, 1, 1])
     # R_mat = np.diag([100, 1]) #  板凳减小电机输出
-    Q = np.diag([1, 1, 10, 1, 100, 1])
-    R_mat = np.diag([1, 10]) 
+    Q = np.diag([1, 1, 30, 1, 2000, 1])
+    R_mat = np.diag([100, 1]) 
     try:
         P_sol = scipy.linalg.solve_continuous_are(A_num, B_num, Q, R_mat)
         K = np.linalg.inv(R_mat) @ B_num.T @ P_sol
