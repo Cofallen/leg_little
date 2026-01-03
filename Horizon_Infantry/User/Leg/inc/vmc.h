@@ -23,10 +23,12 @@
 #define VEL 1
 #define ACC 2
 
-#define MAX_TORQUE_LEG_T 2.0f
-#define MIN_TORQUE_LEG_T -2.0f
-#define MAX_TORQUE_LEG_W 1.5f
-#define MIN_TORQUE_LEG_W -1.5f
+#define MAX_TORQUE_LEG_T 3.5f
+#define MIN_TORQUE_LEG_T -3.5f
+#define MAX_TORQUE_LEG_W 4.0f
+#define MIN_TORQUE_LEG_W -4.0f
+#define MAX_LEG_LENGTH 0.16f
+#define MIN_LEG_LENGTH 0.09f
 
 #define REDUCTION_RATIO 15.764705882352941176470588235294f   // 268/17
 
