@@ -21,14 +21,14 @@ void Vmc_Init(Leg_Typedef *object, float target_l0)
     object->target.yaw = 0.0f;
     object->target.d2theta = 0.0f;
 
-    const float F0_control[3] = {100.0f, 0.0f, 200.0f};
-    const float Yaw_control[3] = {0.3f, 0.001f, 0.0f};
-    const float Delta_control[3] = {100.0f, 0.01f, 0.0f};
+    const float F0_control[3] = {600.0f, 1.0f, 1200.0f};
+    const float Yaw_control[3] = {1.0f, 0.001f, 0.0f};
+    const float Delta_control[3] = {1.0f, 0.0f, 0.0f};
     const float Roll_control[3] = {100.0f, 0.0f, 20.0f};
 
-    PID_init(&object->pid.F0_l, PID_POSITION, F0_control, 0.0f, 0.0f);
-    PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.0f, 0.0f);
-    PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 10.0f, 0.0f);
+    PID_init(&object->pid.F0_l, PID_POSITION, F0_control, 10.0f, 0.0f);
+    PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.2f, 0.0f);
+    PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 1.0f, 0.0f);
     PID_init(&object->pid.Roll, PID_POSITION, Roll_control, 0.0f, 0.0f);
 }
 

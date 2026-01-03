@@ -129,18 +129,18 @@ void Chassis_SendTorque()
     if (temp == 1){
       mit_ctrl(&hcan1, 0x01, 0,0,0,0, -Leg_l.LQR.torque_setT[0]);
       mit_ctrl(&hcan1, 0x03, 0,0,0,0, -Leg_l.LQR.torque_setT[1]);
-    //   mit_ctrl(&hcan1, 0x01, 0, 0, 0, 0, 0);
-    //   mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
-    //   DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
-      // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      // mit_ctrl(&hcan1, 0x01, 0, 0, 0, 0, 0);
+      // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
+      // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
+      DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{
       mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.LQR.torque_setT[0]);
       mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.LQR.torque_setT[1]);
-    //   mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
-    //   mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
+      // mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
+      // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;
     }
 }

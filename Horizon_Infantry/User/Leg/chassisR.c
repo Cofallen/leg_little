@@ -6,7 +6,7 @@
 #include "get_K.h"
 
 void ChassisR_Init(void)
-{
+{   
     motor_mode(&hcan1, LEG_RF+1, 0x000, 0xfc);
     osDelay(1);
     motor_mode(&hcan1, LEG_RB+1, 0x000, 0xfc);
@@ -73,8 +73,8 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     // object->LQR.F_0 = object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
-    object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
-    object->LQR.T_w = object->LQR.T_w + object->LQR.dF_yaw;
+    object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
+    object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
 
 
     object->LQR.torque_setT[0] = object->vmc_calc.JRM[0][0] * object->LQR.F_0 + \

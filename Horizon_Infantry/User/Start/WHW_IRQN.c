@@ -90,8 +90,8 @@ void StartMoveTask(void const * argument)
     osDelay(10);
     ChassisL_Init();
     ChassisR_Init();
-    Vmc_Init(&Leg_l, 0.11f);
-    Vmc_Init(&Leg_r, 0.11f);
+    Vmc_Init(&Leg_l, 0.08f);
+    Vmc_Init(&Leg_r, 0.08f);
 
     while (IMU_Data.pitch == 0.0f)
     {
