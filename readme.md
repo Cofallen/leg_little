@@ -102,8 +102,16 @@ PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 10.0f, 0.0f);
 6. roll补偿：保证站立的时候车身不会倾斜过大
 
 7. yaw补偿：保证不会疯转
+```c
+const float Yaw_control[3] = {1.0f, 0.001f, 250.0f};
+PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.4f, 0.0f);
+```
+注意两个电机最大输出扭矩，给个20%左右，观察pid输出的大小，可先全给正，然后在debug里选择Kp的正负值，观察err是否收敛，确定极性。
 
+另外，该项kd需置大，否则会转动的时候一顿一顿然后走直线会左右摇晃。
 
+- 支持力解算
+和pid腿长有关，先调好腿长后再进行支持力解算。
 
 ### TODO
 
@@ -116,3 +124,4 @@ PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 10.0f, 0.0f);
 - 2025-12-29 完成简单走线和电机设置控制，可以写解算代码了
 - 2025-12-30 四点总算完成vmc正解算了，今年能让腿站起来吗
 - 2026-1-2   串腿能站了！！可惜没有年前实现，话说极性也太难调了，比我写代码时间都长，不愧测试岗挣得多
+- 2026-1-3   成功确定极性调法，比较稳定的一版，可惜没调lqr

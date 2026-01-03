@@ -21,13 +21,13 @@ void Vmc_Init(Leg_Typedef *object, float target_l0)
     object->target.yaw = 0.0f;
     object->target.d2theta = 0.0f;
 
-    const float F0_control[3] = {600.0f, 1.0f, 1200.0f};
-    const float Yaw_control[3] = {1.0f, 0.001f, 0.0f};
+    const float F0_control[3] = {800.0f, 1.0f, 1200.0f};
+    const float Yaw_control[3] = {1.0f, 0.001f, 250.0f};
     const float Delta_control[3] = {1.0f, 0.0f, 0.0f};
     const float Roll_control[3] = {100.0f, 0.0f, 20.0f};
 
-    PID_init(&object->pid.F0_l, PID_POSITION, F0_control, 10.0f, 0.0f);
-    PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.2f, 0.0f);
+    PID_init(&object->pid.F0_l, PID_POSITION, F0_control, 30.0f, 0.0f);
+    PID_init(&object->pid.Yaw, PID_POSITION, Yaw_control, 0.4f, 0.0f);
     PID_init(&object->pid.Delta, PID_POSITION, Delta_control, 1.0f, 0.0f);
     PID_init(&object->pid.Roll, PID_POSITION, Roll_control, 0.0f, 0.0f);
 }
@@ -48,6 +48,7 @@ void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
     object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
     
     getMatJRM(&object->vmc_calc, object->vmc_calc.phi0[POS], object->vmc_calc.phi1[POS], object->vmc_calc.phi2[POS], object->vmc_calc.phi3[POS], object->vmc_calc.phi4[POS], object->vmc_calc.L0[POS], L1_LENGTH, L4_LENGTH);
+    Vmc_getFnL(object, imu);
 }
 
 
@@ -67,6 +68,7 @@ void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
     object->vmc_calc.L0[ACC] = Discreteness_Diff(&object->Discreteness.D_L, object->vmc_calc.L0[VEL], dt);
 
     getMatJRM(&object->vmc_calc, object->vmc_calc.phi0[POS], object->vmc_calc.phi1[POS], object->vmc_calc.phi2[POS], object->vmc_calc.phi3[POS], object->vmc_calc.phi4[POS], object->vmc_calc.L0[POS], L1_LENGTH, L4_LENGTH);
+    Vmc_getFnR(object, imu);
 }
 
 
@@ -105,4 +107,30 @@ static void getMatJRM(vmc_Typedef *vmc, float phi0, float phi1, float phi2, floa
     vmc->JRM[0][1] = -l1 * arm_sin_f32(phi1 - phi2) * arm_cos_f32(phi0 - phi3) / (L0 * arm_sin_f32(phi2 - phi3));
     vmc->JRM[1][0] = -l4 * arm_sin_f32(phi0 - phi2) * arm_sin_f32(phi3 - phi4) / arm_sin_f32(phi2 - phi3);
     vmc->JRM[1][1] = -l4 * arm_sin_f32(phi3 - phi4) * arm_cos_f32(phi0 - phi2) / (L0 * arm_sin_f32(phi2 - phi3));
+}
+
+static float Vmc_getFnL(Leg_Typedef *object, IMU_Data_t *imu)
+{
+    float P = 0.0f, ddz_w = 0.0f;
+    static float ddl_fL, ddtheta_fL, acc_fL; 
+    ddl_fL = Lowpass_Filter(&ddl_fL, object->vmc_calc.L0[ACC], 0.1f);
+    acc_fL = Lowpass_Filter(&acc_fL, imu->accel[2], 0.1f);
+
+    P = object->LQR.F_0 * arm_cos_f32(object->stateSpace.theta) + object->LQR.T_p * arm_sin_f32(object->stateSpace.theta) / object->vmc_calc.L0[POS];
+    ddz_w = (acc_fL - 9.81f) - ddl_fL * arm_cos_f32(object->stateSpace.theta) + 2.0f * object->vmc_calc.L0[VEL] * object->stateSpace.dtheta * arm_sin_f32(object->stateSpace.theta) + \
+            object->vmc_calc.L0[POS] * arm_sin_f32(object->stateSpace.theta) * ddtheta_fL + object->vmc_calc.L0[POS] * object->stateSpace.dtheta * object->stateSpace.dtheta * arm_cos_f32(object->stateSpace.theta);
+    object->LQR.Fn = P + MASS_WHEEL * 9.81f + MASS_WHEEL * ddz_w;
+}
+
+static float Vmc_getFnR(Leg_Typedef *object, IMU_Data_t *imu)
+{
+    float P = 0.0f, ddz_w = 0.0f;
+    static float ddl_fR, ddtheta_fR, acc_fR; 
+    ddl_fR = Lowpass_Filter(&ddl_fR, object->vmc_calc.L0[ACC], 0.1f);
+    acc_fR = Lowpass_Filter(&acc_fR, imu->accel[2], 0.1f);
+
+    P = object->LQR.F_0 * arm_cos_f32(object->stateSpace.theta) + object->LQR.T_p * arm_sin_f32(object->stateSpace.theta) / object->vmc_calc.L0[POS];
+    ddz_w = (acc_fR - 9.81f) - ddl_fR * arm_cos_f32(object->stateSpace.theta) + 2.0f * object->vmc_calc.L0[VEL] * object->stateSpace.dtheta * arm_sin_f32(object->stateSpace.theta) + \
+            object->vmc_calc.L0[POS] * arm_sin_f32(object->stateSpace.theta) * ddtheta_fR + object->vmc_calc.L0[POS] * object->stateSpace.dtheta * object->stateSpace.dtheta * arm_cos_f32(object->stateSpace.theta);
+    object->LQR.Fn = P + MASS_WHEEL * 9.81f + MASS_WHEEL * ddz_w;
 }

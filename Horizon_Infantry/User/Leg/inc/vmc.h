@@ -115,6 +115,7 @@ typedef struct
         float dF_delta;         // 防劈叉
         float dF_yaw;           // 转向控制
         float F_0;              // 支持力
+        float Fn;               // 轮子支持力，用于离地检测
         float torque_setT[2];
         float torque_setW;
     }LQR;
@@ -131,6 +132,8 @@ void Vmc_calcL(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float
 void Vmc_calcR(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt);
 static void getPhi(vmc_Typedef *vmc, float phi1, float phi4, float l1, float l2, float l3, float l4, float l5);
 static void getMatJRM(vmc_Typedef *vmc, float phi0, float phi1, float phi2, float phi3, float phi4, float L0, float l1, float l4);
+static float Vmc_getFnL(Leg_Typedef *object, IMU_Data_t *imu);
+static float Vmc_getFnR(Leg_Typedef *object, IMU_Data_t *imu);
 
 
 #endif // !__VMC_H

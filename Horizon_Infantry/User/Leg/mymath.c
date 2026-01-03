@@ -48,3 +48,9 @@ void DJI_Torque_Control(hcan_t* hcan, uint16_t stdid, float t1, float t2, float 
 
     canx_send_data(hcan, stdid, Data);
 }
+
+float Lowpass_Filter(float *last_output, float input, float alpha)
+{
+    *last_output = alpha * input + (1.0f - alpha) * (*last_output);
+    return *last_output;
+}
