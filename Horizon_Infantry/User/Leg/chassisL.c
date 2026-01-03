@@ -69,8 +69,10 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->target.s = Discreteness_Sum(&object->Discreteness.target_s, object->target.dot_s, dt);
     object->target.phi = 0.0f;
     object->target.dphi = 0.0f;
-    object->target.yaw = (float)dbus->Remote.CH2_int16 / 6000.0f;
+    object->target.yaw += (float)dbus->Remote.CH2_int16 / 660000.0f;
     object->target.l0 += (float)dbus->Remote.CH3_int16 / 660000.0f; 
+    (object->target.l0 > MAX_LEG_LENGTH) ? (object->target.l0 = MAX_LEG_LENGTH) : (object->target.l0 < MIN_LEG_LENGTH) ? (object->target.l0 = MIN_LEG_LENGTH) : 0;
+
 
     object->LQR.T_w = (ChassisL_LQR_K[0] * (object->stateSpace.theta - object->target.theta) +
                      ChassisL_LQR_K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
@@ -131,7 +133,7 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      // DJI_Torque_Control(&hcan2, 0x200, Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{
