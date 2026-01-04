@@ -6,4 +6,7 @@
 extern float ChassisL_LQR_K[12];
 extern float ChassisR_LQR_K[12];
 
+extern float ChassisL_LQR_K_fall[12];
+extern float ChassisR_LQR_K_fall[12];
+
 #endif // !__GET_K_H

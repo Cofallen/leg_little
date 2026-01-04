@@ -28,25 +28,7 @@ void ChassisR_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t 
 
 
 void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, float dt)
-{
-    if (fabs(object->LQR.Fn) <= 5.0f)
-    {
-      object->LQR.K[0] = 0.0f;
-      object->LQR.K[1] = 0.0f;
-      object->LQR.K[2] = 0.0f;
-      object->LQR.K[3] = 0.0f;
-      object->LQR.K[4] = 0.0f;
-      object->LQR.K[5] = 0.0f;
-      object->LQR.K[8] = 0.0f;
-      object->LQR.K[9] = 0.0f;
-      object->LQR.K[10] = 0.0f;
-      object->LQR.K[11] = 0.0f;
-    }
-    else
-    {
-      memcpy(object->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
-    }
-    
+{   
     // 目标值获取应加上滤波 重写一个函数
     object->target.theta = 0.0f;
     // object->target.theta = -0.008f;
@@ -59,19 +41,19 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->target.l0 += (float)dbus->Remote.CH3_int16 / 660000.0f; 
     (object->target.l0 > MAX_LEG_LENGTH) ? (object->target.l0 = MAX_LEG_LENGTH) : (object->target.l0 < MIN_LEG_LENGTH) ? (object->target.l0 = MIN_LEG_LENGTH) : 0;
 
-    object->LQR.T_w = (ChassisR_LQR_K[0] * (object->stateSpace.theta - object->target.theta) +
-                     ChassisR_LQR_K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
-                     ChassisR_LQR_K[2] * (object->stateSpace.s - object->target.s) +
-                     ChassisR_LQR_K[3] * (object->stateSpace.dot_s - object->target.dot_s) +
-                     ChassisR_LQR_K[4] * (object->stateSpace.phi - object->target.phi) +
-                     ChassisR_LQR_K[5] * (object->stateSpace.dphi - object->target.dphi));
+    object->LQR.T_w = (object->LQR.K[0] * (object->stateSpace.theta - object->target.theta) +
+                     object->LQR.K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
+                     object->LQR.K[2] * (object->stateSpace.s - object->target.s) +
+                     object->LQR.K[3] * (object->stateSpace.dot_s - object->target.dot_s) +
+                     object->LQR.K[4] * (object->stateSpace.phi - object->target.phi) +
+                     object->LQR.K[5] * (object->stateSpace.dphi - object->target.dphi));
 
-    object->LQR.T_p = (ChassisR_LQR_K[6] * (object->stateSpace.theta - object->target.theta) +
-                      ChassisR_LQR_K[7] * (object->stateSpace.dtheta - object->target.dtheta) +
-                      ChassisR_LQR_K[8] * (object->stateSpace.s - object->target.s) +
-                      ChassisR_LQR_K[9] * (object->stateSpace.dot_s - object->target.dot_s) +
-                      ChassisR_LQR_K[10] * (object->stateSpace.phi - object->target.phi) +
-                      ChassisR_LQR_K[11] * (object->stateSpace.dphi - object->target.dphi));
+    object->LQR.T_p = (object->LQR.K[6] * (object->stateSpace.theta - object->target.theta) +
+                      object->LQR.K[7] * (object->stateSpace.dtheta - object->target.dtheta) +
+                      object->LQR.K[8] * (object->stateSpace.s - object->target.s) +
+                      object->LQR.K[9] * (object->stateSpace.dot_s - object->target.dot_s) +
+                      object->LQR.K[10] * (object->stateSpace.phi - object->target.phi) +
+                      object->LQR.K[11] * (object->stateSpace.dphi - object->target.dphi));
 
     PID_calc(&object->pid.F0_l, object->vmc_calc.L0[POS], object->target.l0);
     object->LQR.dF_0 = object->pid.F0_l.out;
@@ -89,7 +71,7 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     // object->LQR.F_0 = object->LQR.dF_0 - object->LQR.dF_roll;
 
     // pid修正
-    object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
+    object->LQR.T_p = object->LQR.T_p - object->LQR.dF_delta;
     object->LQR.T_w = object->LQR.T_w - object->LQR.dF_yaw;
 
 
@@ -100,7 +82,11 @@ void ChassisR_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->LQR.torque_setW  = object->LQR.T_w;
 
     // 限幅
-    (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < MIN_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MIN_TORQUE_LEG_T) : 0;
-    (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < MIN_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MIN_TORQUE_LEG_T) : 0;
-    (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < MIN_TORQUE_LEG_W) ? (object->LQR.torque_setW = MIN_TORQUE_LEG_W) : 0;
+    // (object->LQR.torque_setT[0] > object->limit.T_max) ? (object->LQR.torque_setT[0] = object->limit.T_max) : (object->LQR.torque_setT[0] < -object->limit.T_max) ? (object->LQR.torque_setT[0] = -object->limit.T_max) : 0;
+    // (object->LQR.torque_setT[1] > object->limit.T_max) ? (object->LQR.torque_setT[1] = object->limit.T_max) : (object->LQR.torque_setT[1] < -object->limit.T_max) ? (object->LQR.torque_setT[1] = -object->limit.T_max) : 0;
+    // (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setT[0] < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
+
+    (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = -MAX_TORQUE_LEG_T) : 0;
+    (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = -MAX_TORQUE_LEG_T) : 0;
+    (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < -MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = -MAX_TORQUE_LEG_W) : 0;
 }

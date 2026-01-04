@@ -8,7 +8,6 @@
 #include "pid_temp.h"
 
 
-
 void ChassisL_Init(void)
 {
     motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
@@ -58,26 +57,7 @@ void Chassis_UpdateStateS(Leg_Typedef *Leg_l, Leg_Typedef *Leg_r, MOTOR_Typedef 
 
 
 void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, float dt)
-{
-    if (fabs(object->LQR.Fn) <= 5.0f)
-    {
-      object->LQR.K[0] = 0.0f;
-      object->LQR.K[1] = 0.0f;
-      object->LQR.K[2] = 0.0f;
-      object->LQR.K[3] = 0.0f;
-      object->LQR.K[4] = 0.0f;
-      object->LQR.K[5] = 0.0f;
-      object->LQR.K[8] = 0.0f;
-      object->LQR.K[9] = 0.0f;
-      object->LQR.K[10] = 0.0f;
-      object->LQR.K[11] = 0.0f;
-    }
-    else
-    {
-      memcpy(object->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
-    }
-    
-    
+{   
     // 目标值获取应加上滤波 重写一个函数
     object->target.theta = 0.0f;
     // object->target.theta = -0.008f;
@@ -91,19 +71,19 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     (object->target.l0 > MAX_LEG_LENGTH) ? (object->target.l0 = MAX_LEG_LENGTH) : (object->target.l0 < MIN_LEG_LENGTH) ? (object->target.l0 = MIN_LEG_LENGTH) : 0;
 
 
-    object->LQR.T_w = (ChassisL_LQR_K[0] * (object->stateSpace.theta - object->target.theta) +
-                     ChassisL_LQR_K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
-                     ChassisL_LQR_K[2] * (object->stateSpace.s - object->target.s) +
-                     ChassisL_LQR_K[3] * (object->stateSpace.dot_s - object->target.dot_s) +
-                     ChassisL_LQR_K[4] * (object->stateSpace.phi - object->target.phi) +
-                     ChassisL_LQR_K[5] * (object->stateSpace.dphi - object->target.dphi));
+    object->LQR.T_w = (object->LQR.K[0] * (object->stateSpace.theta - object->target.theta) +
+                     object->LQR.K[1] * (object->stateSpace.dtheta - object->target.dtheta) +
+                     object->LQR.K[2] * (object->stateSpace.s - object->target.s) +
+                     object->LQR.K[3] * (object->stateSpace.dot_s - object->target.dot_s) +
+                     object->LQR.K[4] * (object->stateSpace.phi - object->target.phi) +
+                     object->LQR.K[5] * (object->stateSpace.dphi - object->target.dphi));
 
-    object->LQR.T_p = (ChassisL_LQR_K[6] * (object->stateSpace.theta - object->target.theta) +
-                      ChassisL_LQR_K[7] * (object->stateSpace.dtheta - object->target.dtheta) +
-                      ChassisL_LQR_K[8] * (object->stateSpace.s - object->target.s) +
-                      ChassisL_LQR_K[9] * (object->stateSpace.dot_s - object->target.dot_s) +
-                      ChassisL_LQR_K[10] * (object->stateSpace.phi - object->target.phi) +
-                      ChassisL_LQR_K[11] * (object->stateSpace.dphi - object->target.dphi));
+    object->LQR.T_p = (object->LQR.K[6] * (object->stateSpace.theta - object->target.theta) +
+                      object->LQR.K[7] * (object->stateSpace.dtheta - object->target.dtheta) +
+                      object->LQR.K[8] * (object->stateSpace.s - object->target.s) +
+                      object->LQR.K[9] * (object->stateSpace.dot_s - object->target.dot_s) +
+                      object->LQR.K[10] * (object->stateSpace.phi - object->target.phi) +
+                      object->LQR.K[11] * (object->stateSpace.dphi - object->target.dphi));
 
     PID_calc(&object->pid.F0_l, object->vmc_calc.L0[POS], object->target.l0);
     object->LQR.dF_0 = object->pid.F0_l.out;
@@ -123,7 +103,6 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->LQR.T_p = object->LQR.T_p + object->LQR.dF_delta;
     object->LQR.T_w = object->LQR.T_w + object->LQR.dF_yaw;
 
-
     object->LQR.torque_setT[0] = object->vmc_calc.JRM[0][0] * object->LQR.F_0 + \
                                  object->vmc_calc.JRM[0][1] * object->LQR.T_p;
     object->LQR.torque_setT[1] = object->vmc_calc.JRM[1][0] * object->LQR.F_0 + \
@@ -131,10 +110,13 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     object->LQR.torque_setW  = object->LQR.T_w;
 
     // 限幅
-    (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < MIN_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MIN_TORQUE_LEG_T) : 0;
-    (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < MIN_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MIN_TORQUE_LEG_T) : 0;
-    (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < MIN_TORQUE_LEG_W) ? (object->LQR.torque_setW = MIN_TORQUE_LEG_W) : 0;
+    // (object->LQR.torque_setT[0] > object->limit.T_max) ? (object->LQR.torque_setT[0] = object->limit.T_max) : (object->LQR.torque_setT[0] < -object->limit.T_max) ? (object->LQR.torque_setT[0] = -object->limit.T_max) : 0;
+    // (object->LQR.torque_setT[1] > object->limit.T_max) ? (object->LQR.torque_setT[1] = object->limit.T_max) : (object->LQR.torque_setT[1] < -object->limit.T_max) ? (object->LQR.torque_setT[1] = -object->limit.T_max) : 0;
+    // (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setT[0] < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
 
+    (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = -MAX_TORQUE_LEG_T) : 0;
+    (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = -MAX_TORQUE_LEG_T) : 0;
+    (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < -MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = -MAX_TORQUE_LEG_W) : 0;
 }
 
 
@@ -159,5 +141,102 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
       // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;
+    }
+}
+
+void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
+{ 
+    // 离地状态
+    if (fabs(left->LQR.Fn) <= 5.0f)
+    {
+      left->status.offGround = 1;
+      memcpy(left->LQR.K, ChassisL_LQR_K_fall, sizeof(float) * 12);
+    } else {
+      left->status.offGround = 0;
+      memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
+    }
+    if (fabs(right->LQR.Fn) <= 5.0f)
+    {
+      right->status.offGround = 1;
+      memcpy(right->LQR.K, ChassisR_LQR_K_fall, sizeof(float) * 12);
+    } else {
+      right->status.offGround = 0;
+      memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
+    }
+
+    // 倒地自启
+    uint8_t is_fallen = (fabs(left->stateSpace.theta) >= 1.6f) || (fabs(right->stateSpace.theta) >= 1.6f);
+    uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.6f) && (fabs(right->stateSpace.theta) < 1.6f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));
+    // 使用 left->status.stand 作为整车的状态标志 (0:正常, 1:倒地, 2:恢复)
+    switch (left->status.stand)
+    {
+    case 0:   // 正常状态
+      if (is_fallen)
+      {
+        left->status.stand = 1;
+        right->status.stand = 1;
+      }
+      break;
+    case 1:   // 倒地状态
+      if (can_recover)
+      {
+        left->status.stand = 2;
+        right->status.stand = 2;
+      }
+      // 否则保持倒地
+      break;
+    case 2:   // 恢复状态
+      if (is_fallen)  // 如果再次倒地，切回上一个状态
+      {
+        left->status.stand = 1;
+        right->status.stand = 1;
+      }
+      else
+      {
+        left->status.stand_count++;
+        right->status.stand_count++;
+        if (left->status.stand_count >= 5000 || right->status.stand_count >= 5000)
+        {
+          left->status.stand_count = 0;
+          right->status.stand_count = 0;
+          left->status.stand = 0;
+          right->status.stand = 0;
+        }
+      }
+      break;
+    default:
+      break;
+    }
+}
+
+// 不同状态处理
+void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
+{
+    int machine_state = left->status.stand;
+
+    if (machine_state == 1) // 倒地
+    {
+      left->limit.W_max = 0.0f;
+      right->limit.W_max = 0.0f;
+      left->target.l0 = 0.12f;
+      right->target.l0 = 0.12f;
+      left->limit.T_max = 1.0f;
+      right->limit.T_max = 1.0f;
+    }
+    else if (machine_state == 2) // 恢复
+    {
+      // 轮子给小，防止飞出
+      left->limit.W_max = 2.0f;
+      right->limit.W_max = 2.0f;
+      // 腿部正常
+      left->limit.T_max = MAX_TORQUE_LEG_T / 1.5f;
+      right->limit.T_max = MAX_TORQUE_LEG_T / 1.5f;
+    }
+    else // 正常
+    {
+      left->limit.W_max = MAX_TORQUE_LEG_W;
+      right->limit.W_max = MAX_TORQUE_LEG_W;
+      left->limit.T_max = MAX_TORQUE_LEG_T;
+      right->limit.T_max = MAX_TORQUE_LEG_T;
     }
 }

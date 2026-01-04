@@ -24,9 +24,7 @@
 #define ACC 2
 
 #define MAX_TORQUE_LEG_T 3.5f
-#define MIN_TORQUE_LEG_T -3.5f
 #define MAX_TORQUE_LEG_W 4.0f
-#define MIN_TORQUE_LEG_W -4.0f
 #define MAX_LEG_LENGTH 0.132f
 #define MIN_LEG_LENGTH 0.065f
 
@@ -101,7 +99,8 @@ typedef struct
         uint8_t offGround;
         uint8_t jump;
         uint8_t stand;
-        uint8_t crouch;
+        uint16_t stand_count;   // 延迟起立lqr时间
+        uint8_t err[2];
     }status;
 
     struct 
@@ -120,6 +119,11 @@ typedef struct
         float torque_setW;
     }LQR;
     
+    struct 
+    {
+        float T_max;
+        float W_max;
+    }limit;
     
 }Leg_Typedef;
 
