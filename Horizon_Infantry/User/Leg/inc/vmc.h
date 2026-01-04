@@ -25,8 +25,8 @@
 
 #define MAX_TORQUE_LEG_T 3.5f
 #define MIN_TORQUE_LEG_T -3.5f
-#define MAX_TORQUE_LEG_W 1.0f
-#define MIN_TORQUE_LEG_W -1.0f
+#define MAX_TORQUE_LEG_W 4.0f
+#define MIN_TORQUE_LEG_W -4.0f
 #define MAX_LEG_LENGTH 0.132f
 #define MIN_LEG_LENGTH 0.065f
 
