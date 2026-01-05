@@ -100,6 +100,12 @@ void StartMoveTask(void const * argument)
     osDelay(3000); // 等待IMU数据稳定
     for (;;)
     {
+        if (WHW_V_DBUS.Remote.S2_u8 == 2)
+        {
+            ChassisL_Init(&Leg_l);
+            ChassisR_Init(&Leg_r);
+        }
+        
         RUI_V_CONTAL.DWT_TIME.Move_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.Move_DWT_Count);
         Vmc_calcL(&Leg_l, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Vmc_calcR(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
