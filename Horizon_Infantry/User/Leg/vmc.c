@@ -21,6 +21,7 @@ void Vmc_Init(Leg_Typedef *object, float target_l0)
     object->target.yaw = 0.0f;
     object->target.d2theta = 0.0f;
 
+    // const float F0_control[3] = {8000.0f, 0.0f, 30000.0f};  // 下落状态切换
     const float F0_control[3] = {800.0f, 1.0f, 5000.0f};
     const float Yaw_control[3] = {1.0f, 0.0f, 800.0f};
     const float Delta_control[3] = {0.5f, 0.0f, 1.0f};

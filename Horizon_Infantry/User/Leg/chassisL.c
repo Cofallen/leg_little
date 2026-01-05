@@ -8,13 +8,16 @@
 #include "pid_temp.h"
 
 
-void ChassisL_Init(void)
+void ChassisL_Init(Leg_Typedef *object)
 {
     motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
     osDelay(1);
     motor_mode(&hcan1, LEG_LB+1, 0x000, 0xfc);
     osDelay(1);
     ALL_MOTOR.left_wheel.DATA.Angle_Init = ALL_MOTOR.left_wheel.DATA.Angle_Infinite;
+    // Discreteness_Init(&object->Discreteness.Theta, 0.9f);
+    // Discreteness_Init(&object->Discreteness.Phi, 0.9f);
+    // Discreteness_Init(&object->Discreteness.dS, 0.9f);
 }
 
 void ChassisL_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
@@ -132,38 +135,39 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{
-      // mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.LQR.torque_setT[0]);
-      // mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.LQR.torque_setT[1]);
-      mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
-      mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
+      mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.LQR.torque_setT[0]);
+      mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.LQR.torque_setT[1]);
+      // mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
+      // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;
     }
 }
 
 void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
 { 
-    // 离地状态
-    if (fabs(left->LQR.Fn) <= 5.0f)
-    {
-      left->status.offGround = 1;
-      memcpy(left->LQR.K, ChassisL_LQR_K_fall, sizeof(float) * 12);
-    } else {
-      left->status.offGround = 0;
-      memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
-    }
-    if (fabs(right->LQR.Fn) <= 5.0f)
-    {
-      right->status.offGround = 1;
-      memcpy(right->LQR.K, ChassisR_LQR_K_fall, sizeof(float) * 12);
-    } else {
-      right->status.offGround = 0;
-      memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
-    }
-
+    // // 离地状态
+    // if (fabs(left->LQR.Fn) <= 5.0f)
+    // {
+    //   left->status.offGround = 1;
+    //   memcpy(left->LQR.K, ChassisL_LQR_K_fall, sizeof(float) * 12);
+    // } else {
+    //   left->status.offGround = 0;
+    //   memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
+    // }
+    // if (fabs(right->LQR.Fn) <= 5.0f)
+    // {
+    //   right->status.offGround = 1;
+    //   memcpy(right->LQR.K, ChassisR_LQR_K_fall, sizeof(float) * 12);
+    // } else {
+    //   right->status.offGround = 0;
+    //   memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
+    // }
+    memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
+    memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
     // 倒地自启
     uint8_t is_fallen = (left->vmc_calc.L0[POS] >= 0.8f || right->vmc_calc.L0[POS] >= 0.8f) && (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
     uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.6f) && (fabs(right->stateSpace.theta) < 1.6f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));
@@ -186,13 +190,13 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
       // 否则保持倒地
       break;
     case 2:   // 恢复状态
-      if (is_fallen)  // 如果再次倒地，切回上一个状态
-      {
-        left->status.stand = 1;
-        right->status.stand = 1;
-      }
-      else
-      {
+      // if (is_fallen)  // 如果再次倒地，切回上一个状态
+      // {
+      //   left->status.stand = 1;
+      //   right->status.stand = 1;
+      // }
+      // else
+      // {
         left->status.stand_count++;
         right->status.stand_count++;
         if (left->status.stand_count >= 5000 || right->status.stand_count >= 5000)
@@ -202,7 +206,7 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
           left->status.stand = 0;
           right->status.stand = 0;
         }
-      }
+      // }
       break;
     default:
       break;
@@ -216,27 +220,27 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
 
     if (machine_state == 1) // 倒地
     {
-      left->limit.W_max = 0.0f;
-      right->limit.W_max = 0.0f;
-      left->target.l0 = 0.12f;
-      right->target.l0 = 0.12f;
-      left->limit.T_max = 1.0f;
-      right->limit.T_max = 1.0f;
-      // 目标theta 由当前值
-      left->target.dtheta = -0.3;
-      left->target.theta = left->stateSpace.theta - 0.3f * 0.001f;
-      // if (left->target.theta < 1.57f)
-      // {
-      //   left->target.theta = 0.0f;
-      // }
+      // left->limit.W_max = 0.0f;
+      // right->limit.W_max = 0.0f;
+      // left->target.l0 = 0.12f;
+      // right->target.l0 = 0.12f;
+      // left->limit.T_max = 1.0f;
+      // right->limit.T_max = 1.0f;
+      // // 目标theta 由当前值
+      // left->target.theta = 4.0;
+      // left->target.dtheta = Discreteness_Diff(&left->Discreteness.target_theta, left->target.theta, 0.001f);
+      // // if (left->target.theta < 1.57f)
+      // // {
+      // //   left->target.theta = 0.0f;
+      // // }
       
-      left->target.s = left->stateSpace.s;
-      left->target.phi = left->stateSpace.phi;
-      right->target.dtheta = -0.3; 
-      right->target.s = right->stateSpace.s;
-      right->target.phi = right->stateSpace.phi;
-      memcpy(left->LQR.K, ChassisL_LQR_K_err, sizeof(float) * 12);
-      memcpy(right->LQR.K, ChassisR_LQR_K_err, sizeof(float) * 12);
+      // left->target.s = left->stateSpace.s;
+      // left->target.phi = left->stateSpace.phi;
+      // right->target.dtheta = -0.3; 
+      // right->target.s = right->stateSpace.s;
+      // right->target.phi = right->stateSpace.phi;
+      // memcpy(left->LQR.K, ChassisL_LQR_K_err, sizeof(float) * 12);
+      // memcpy(right->LQR.K, ChassisR_LQR_K_err, sizeof(float) * 12);
     }
     else if (machine_state == 2) // 恢复
     {
@@ -244,15 +248,22 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
       right->target.l0 = 0.06f;
       if (left->vmc_calc.L0[POS] <= 0.08f && right->vmc_calc.L0[POS] <= 0.08f)
       {
-        
+        left->target.theta = 0.0f;
+        right->target.theta = 0.0f;
+        left->target.s = left->stateSpace.s;
+        right->target.s = right->stateSpace.s;
+        left->target.phi = 0;
+        right->target.phi = 0;
+        memcpy(&left->LQR.K, ChassisL_LQR_K_stand, sizeof(float) * 12);
+        memcpy(&right->LQR.K, ChassisR_LQR_K_stand, sizeof(float) * 12);
       }
       
       // 轮子给小，防止飞出
       left->limit.W_max = 0.0f;
       right->limit.W_max = 0.0f;
-      // 腿部正常
-      left->limit.T_max = 0;
-      right->limit.T_max = 0;
+      // // 腿部正常
+      // left->limit.T_max = 0;
+      // right->limit.T_max = 0;
     }
     else // 正常
     {

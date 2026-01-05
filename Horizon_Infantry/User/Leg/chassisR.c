@@ -5,13 +5,16 @@
 #include "vmc.h"
 #include "get_K.h"
 
-void ChassisR_Init(void)
+void ChassisR_Init(Leg_Typedef *object)
 {   
     motor_mode(&hcan1, LEG_RF+1, 0x000, 0xfc);
     osDelay(1);
     motor_mode(&hcan1, LEG_RB+1, 0x000, 0xfc);
     osDelay(1);
     ALL_MOTOR.right_wheel.DATA.Angle_Init = ALL_MOTOR.right_wheel.DATA.Angle_Infinite;
+    // Discreteness_Init(&object->Discreteness.Theta, 0.9f);
+    // Discreteness_Init(&object->Discreteness.Phi, 0.9f);
+    // Discreteness_Init(&object->Discreteness.dS, 0.9f);
 }
 
 void ChassisR_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)

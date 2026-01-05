@@ -11,9 +11,10 @@ typedef struct
     float last_diff;
     float diff_num;
     float dt;
+    float alpha;    // 滤波系数
 } Discreteness_TypeDef;
 
-void Discreteness_Init(Discreteness_TypeDef *object);
+void Discreteness_Init(Discreteness_TypeDef *object, float alpha);
 float Discreteness_Sum(Discreteness_TypeDef *object, float input, float dt);
 float Discreteness_Diff(Discreteness_TypeDef *object, float input, float dt);
 void DJI_Torque_Control(hcan_t* hcan, uint16_t stdid, float t1, float t2, float t3, float t4);

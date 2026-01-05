@@ -1,20 +1,25 @@
 #include "mymath.h"
 #include "Motors.h"
 
-void Discreteness_Init(Discreteness_TypeDef *object)
+void Discreteness_Init(Discreteness_TypeDef *object, float alpha)
 {
     object->last_sum = 0;
     object->sum_num = 0;
     object->last_diff = 0;
     object->diff_num = 0;
     object->dt = 0;
+    object->alpha = alpha;
 }
 
 float Discreteness_Sum(Discreteness_TypeDef *object, float input, float dt)
 {
     object->dt = dt;
     object->sum_num += input * object->dt;
-    object->last_sum = object->sum_num;
+    if (object->alpha != 0.0f)
+    {
+        object->sum_num = Lowpass_Filter(&object->last_sum, object->sum_num, object->alpha);
+    }
+    object->last_sum = object->sum_num; 
     return object->sum_num;
 }
 
@@ -23,6 +28,10 @@ float Discreteness_Diff(Discreteness_TypeDef *object, float input, float dt)
 {
     object->dt = dt;
     object->diff_num = (input - object->last_diff) / object->dt;
+    if (object->alpha != 0.0f)
+    {
+        object->diff_num = Lowpass_Filter(&object->last_diff, object->diff_num, object->alpha);
+    }
     object->last_diff = input;
     return object->diff_num;
 }
