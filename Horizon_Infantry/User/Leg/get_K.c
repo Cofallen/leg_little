@@ -64,3 +64,17 @@ float ChassisL_LQR_K_err[12] = { 0, 0, 0, 0, 0, 0, 46.61749743, 0, 0, 0, 0, 0 };
 float ChassisR_LQR_K_err[12] = { 0, 0, 0, 0, 0, 0, 46.61749743, 0, 0, 0, 0, 0 };
 float ChassisL_LQR_K_stand[12] =  { -2.59579573, -0.25032605, -0.80573959, -0.93224174, 1.38877756, 0.17692426, 28.11735161, 3.54288027, 5.92269966, 6.56843304, 2.79428941, 0.11763051 };
 float ChassisR_LQR_K_stand[12] =  { -2.59579573, -0.25032605, -0.80573959, -0.93224174, 1.38877756, 0.17692426, 28.11735161, 3.54288027, 5.92269966, 6.56843304, 2.79428941, 0.11763051 };
+
+
+GetLQR_K_t LQR_send_data;
+
+// 通过串口修改K矩阵，实现实时调lqr
+int8_t Chassis_Get_K(GetLQR_K_t *rx_data)
+{
+    if (rx_data->data[0] != 0xCD || rx_data->data[49] != 0xDC)
+    {
+        return -1;
+    }
+    memcpy(ChassisL_LQR_K, rx_data->K_data.LQR_K, sizeof(float) * 12);
+    return 0;
+}

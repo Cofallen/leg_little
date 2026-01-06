@@ -96,33 +96,7 @@ void RobotTask(uint8_t mode,
 
         case 2://云台
         {
-            if(DBUS->Mouse.R_State & (int8_t) Vision->Target)//自瞄
-            {
-                CONTAL->MOD[0] = 1;//云台模式切换
-
-                CONTAL->HEAD.Pitch = Vision->PitchAngle * 22.7555556f;
-
-                CONTAL->HEAD.Pitch = RUI_F_MATH_Limit_float(CONTAL->HEAD.Pitch_MAX,
-                                                            CONTAL->HEAD.Pitch_MIN,
-                                                            CONTAL->HEAD.Pitch);
-
-                CONTAL->HEAD.Yaw = Vision->YawAngle * 22.7555556f;
-            }
-            else//手瞄
-            {
-                CONTAL->MOD[0] = 0;//云台模式切换
-
-                CONTAL->HEAD.Pitch -= (float) (DBUS->Remote.CH3_int16) * 0.001f -
-                                      DBUS->Mouse.Y_Flt * 0.01f;
-
-                CONTAL->HEAD.Pitch = RUI_F_MATH_Limit_float(CONTAL->HEAD.Pitch_MAX,
-                                                            CONTAL->HEAD.Pitch_MIN,
-                                                            CONTAL->HEAD.Pitch);
-
-                CONTAL->HEAD.Yaw -= (float) (DBUS->Remote.CH2_int16) * 0.002f +
-                                    RUI_F_MATH_Limit_float(1, -1, DBUS->Mouse.X_Flt * 0.01f) +
-                                    (float) (DBUS->KeyBoard.E - DBUS->KeyBoard.Q);
-            }
+            
 
         } break;
 

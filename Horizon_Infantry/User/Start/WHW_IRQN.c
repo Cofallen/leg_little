@@ -64,6 +64,7 @@
 #include "chassisL.h"
 #include "chassisR.h"
 #include "vmc.h"
+#include "get_K.h"
 
 uint8_t move_G, move_S, move_C, move_P;
 float t1,t2,dt;
@@ -284,6 +285,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 #define  BUFFER_SIZE_6  (255)
 #define  BUFFER_SIZE_1  (20)
 #define  BUFFER_SIZE_3  (37)
+
 void BSP_UART_IRQHandler(UART_HandleTypeDef *huart)
 {
     if(huart->Instance ==USART3)//遥控接收串口
@@ -312,13 +314,10 @@ void BSP_UART_IRQHandler(UART_HandleTypeDef *huart)
         {
             __HAL_UART_CLEAR_IDLEFLAG(&huart6);  //清除空闲中断标志（否则会一直不断进入中断）
             // 下面进行空闲中断相关处理
-            HAL_UART_DMAStop(&huart6);//暂时停止本次DMA传输，进行数据处理
-            
+            HAL_UART_DMAStop(&huart6);//暂时停止本次DMA传输，进行数据
             data_length_6  = BUFFER_SIZE_6 - __HAL_DMA_GET_COUNTER(&hdma_usart6_rx);//计算接收到的数据长度
-		    Read_Data_first(&ALL_RX , &User_data , data_length_6);//测试函数：待修改
-		    memset((uint8_t*)ALL_RX.Data,0,data_length_6);//清零接收缓冲区
-
-            HAL_UART_Receive_DMA(&huart6,(uint8_t *)ALL_RX.Data,255);  //重启开始DMA传输
+		    Chassis_Get_K(&LQR_send_data);
+            HAL_UART_Receive_DMA(&huart6, LQR_send_data.data, sizeof(LQR_send_data.data));  //重启开始DMA传输
         }
     }
 

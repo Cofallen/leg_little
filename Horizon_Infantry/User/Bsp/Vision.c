@@ -3,10 +3,11 @@
 int8_t Vision_Rx_Data(uint8_t* buffer, VisionRxDataUnion *VisionRx)
 {
     VisionTemp Union_temp;
+    VisionRx->Data.OffCounter = 1;
     uint8_t i = 0;
     //获取头帧
-    VisionRx->Head_frame = buffer[i++];
-    if (VisionRx->Head_frame != 0xCD)
+    VisionRx->Data.Head_frame = buffer[i++];
+    if (VisionRx->Data.Head_frame != 0xCD)
     {
         return -1;
     }
@@ -15,34 +16,39 @@ int8_t Vision_Rx_Data(uint8_t* buffer, VisionRxDataUnion *VisionRx)
     Union_temp.Data[1] = buffer[i++];
     Union_temp.Data[2] = buffer[i++];
     Union_temp.Data[3] = buffer[i++];
-    VisionRx->PitchAngle = Union_temp.Data_f;
+    VisionRx->Data.PitchAngle = Union_temp.Data_f;
     //获取Yaw角度
     Union_temp.Data[0] = buffer[i++];
     Union_temp.Data[1] = buffer[i++];
     Union_temp.Data[2] = buffer[i++];
     Union_temp.Data[3] = buffer[i++];
-    VisionRx->YawAngle = Union_temp.Data_f;
+    VisionRx->Data.YawAngle = Union_temp.Data_f;
+    //获取Pitch 前馈值
+    Union_temp.Data[0] = buffer[i++];
+    Union_temp.Data[1] = buffer[i++];
+    Union_temp.Data[2] = buffer[i++];
+    Union_temp.Data[3] = buffer[i++];
+    VisionRx->Data.PitchOmega = Union_temp.Data_f;
+    //获取Yaw 前馈值
+    Union_temp.Data[0] = buffer[i++];
+    Union_temp.Data[1] = buffer[i++];
+    Union_temp.Data[2] = buffer[i++];
+    Union_temp.Data[3] = buffer[i++];
+    VisionRx->Data.YawOmega = Union_temp.Data_f;
 
-    VisionRx->VisionState = buffer[i] & 0x07;
-    VisionRx->ShootBool = (buffer[i] & 0x08)>>3;
-    VisionRx->Target = (buffer[i] & 0x10)>>4;
-    i++;
-    //if(VisionRxData.PitchAngle>=0)VisionRxData.Target=0;
     //获取VisionTime
     Union_temp.Data[0] = buffer[i++];
     Union_temp.Data[1] = buffer[i++];
     Union_temp.Data[2] = buffer[i++];
     Union_temp.Data[3] = buffer[i++];
-    VisionRx->VisionTime = Union_temp.Data_u32;
+    VisionRx->Data.VisionTime = Union_temp.Data_f;
 
-    VisionRx->End_frame = buffer[i];
-
+    VisionRx->Data.End_frame = buffer[i];
 
     //  VisionRxData.PitchAngle_kal =0;//kalmanFilter(&kfp_visionPitch,VisionRxData.PitchAngle);
     //  VisionRxData.YawAngle_kal =0;//kalmanFilter(&kfp_visionYaw,VisionRxData.YawAngle);
 
-
-    if (VisionRx->End_frame != 0xDC)
+    if (VisionRx->Data.End_frame != 0xDC)
     {
         return -2;
     }

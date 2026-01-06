@@ -14,20 +14,19 @@ typedef union
 
 typedef struct
 {
-    uint8_t data[20];
-    uint8_t Head_frame;
-    float PitchAngle;
-    float YawAngle;
-
-    float PitchAngle_kal;
-    float YawAngle_kal;
-
-    uint32_t VisionTime;
-    uint8_t VisionState : 3;
-    uint8_t ShootBool : 1;
-    uint8_t Target : 1;
-    uint16_t FPS;
-    uint8_t End_frame;
+    uint8_t OriginData[21];
+    struct Data
+    {
+      uint8_t Head_frame;
+      uint8_t End_frame;
+      float PitchAngle;
+      float YawAngle;
+      float PitchOmega;
+      float YawOmega;
+      float VisionTime;
+      uint16_t OffCounter; // 在线检测
+      uint8_t  isOnline;
+    } Data;
 }VisionRxDataUnion;
 
 typedef struct
