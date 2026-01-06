@@ -31,6 +31,7 @@ typedef union
 
 extern GetLQR_K_t LQR_send_data;
 
+void Chassis_Fit_K(float coeffs[][4], float leg_length, float *LQR_K);
 int8_t Chassis_Get_K(GetLQR_K_t *rx_data);
 
 #endif // !__GET_K_H

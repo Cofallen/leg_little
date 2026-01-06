@@ -7,7 +7,6 @@
 #include "get_K.h"
 #include "pid_temp.h"
 
-
 void ChassisL_Init(Leg_Typedef *object)
 {
     motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
@@ -142,7 +141,7 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       temp = -temp;
     }
     else{
@@ -173,8 +172,11 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
     //   right->status.offGround = 0;
     //   memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
     // }
-    memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
-    memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
+    // memcpy(left->LQR.K, ChassisL_LQR_K, sizeof(float) * 12);
+    // memcpy(right->LQR.K, ChassisR_LQR_K, sizeof(float) * 12);
+    Chassis_Fit_K(ChassisL_LQR_K_coeffs, left->vmc_calc.L0[POS], left->LQR.K);
+    Chassis_Fit_K(ChassisR_LQR_K_coeffs, right->vmc_calc.L0[POS], right->LQR.K);
+
     // 倒地自启
     uint8_t is_fallen = (left->vmc_calc.L0[POS] >= 0.8f || right->vmc_calc.L0[POS] >= 0.8f) && (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
     uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.6f) && (fabs(right->stateSpace.theta) < 1.6f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));

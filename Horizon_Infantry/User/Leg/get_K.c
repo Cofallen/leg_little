@@ -100,6 +100,19 @@ float ChassisR_LQR_K_coeffs[12][4] = {
     { 592.86742880, -281.41689400, 45.08613070, -0.95508777 },
 };
 
+// 拟合K矩阵
+void Chassis_Fit_K(float coeffs[][4], float leg_length, float *LQR_K)
+{
+    // 三次多项式，后可考虑exp
+    for (int i = 0; i < 12; i++)
+    {
+        LQR_K[i] =  coeffs[i][0] * leg_length * leg_length * leg_length +
+                    coeffs[i][1] * leg_length * leg_length +
+                    coeffs[i][2] * leg_length +
+                    coeffs[i][3];
+    }
+}
+
 GetLQR_K_t LQR_send_data;
 
 // 通过串口修改K矩阵，实现实时调lqr
