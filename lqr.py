@@ -1,6 +1,8 @@
 import numpy as np
 import sympy as sp
 import scipy.linalg
+import serial
+import struct
 
 # 获取步态周期内 各时刻 k 值
 # TODO 写拟合/实时求解/其他mpc高级方法
@@ -34,13 +36,16 @@ def get_k(leg_length):
     R_val = 0.06
     L_val = leg_length / 2.0
     L_M_val = leg_length / 2.0
-    l_val = 0.027
+    Body_val = 0.2
+    l_val = -0.027
     m_w_val = 0.572
-    m_p_val = 0.115
+    m_p_val = 0.1163
     M_val = 4.5 / 2.0
     I_w_val = 0.5 * m_w_val * R_val**2
-    I_p_val = m_p_val * ((leg_length)**2 + 0.12**2) / 12.0
-    I_M_val = M_val * (0.24**2 + 0.22**2) / 12.0
+    # I_p_val = m_p_val * ((leg_length)**2 + 0.12**2) / 12.0
+    # I_M_val = M_val * (0.24**2 + 0.22**2) / 12.0
+    I_p_val = m_p_val * leg_length**2 / 12.0 + m_p_val * 0.0119**2
+    I_M_val = M_val * Body_val**2 / 12.0 + Body_val * l_val**2 
     g_val = 9.81
 
     # 3. 动力学方程推导 (直接使用数值参数)
@@ -127,13 +132,43 @@ def get_k(leg_length):
         print(f"LQR Solver Error: {e}")
         return None
 
+
+# 把k矩阵输出成c数组K[12]，通过端口发送到串口上
+def send_k(COM):
+    serial_port = serial.Serial(COM, baudrate=115200)
+    data = get_k(0.08 )
+    if data is not None:
+        flat_data = np.array(data).flatten()
+        c_str = ", ".join([f"{x:.8f}" for x in flat_data])
+        print(f"float K[{len(flat_data)}] = {{ {c_str}}};\n")
+        header = b'\xCD'
+        tail   = b'\xDC'
+        data = struct.pack('<' + 'f' * len(flat_data), *flat_data)
+        packet = header + data + tail
+        serial_port.write(packet)
+        serial_port.close()
+
+# 拟合k矩阵 0.08-0.17 步长0.005
+def fit_k():
+    leg_lengths = np.arange(0.08, 0.18, 0.005)
+    k_values = []
+    for ll in leg_lengths:
+        print('solve: ',float(ll))
+        K = get_k(float(ll))
+        if K is not None:
+            k_values.append(np.array(K).flatten())
+        else:
+            k_values.append(np.full((12,), np.nan))
+    k_values = np.array(k_values)
+    
+
 if __name__ == "__main__":
-    data = get_k(0.1 )
+    data = get_k(0.08)
     if data is not None:
         # 将矩阵展平为一维数组
         flat_data = np.array(data).flatten()
         # 格式化为 C 语言数组字符串，保留8位小数
         c_str = ", ".join([f"{x:.8f}" for x in flat_data])
-        print(f"float K[{len(flat_data)}] = {{ {c_str} }};")
-    else:
-        print("Failed to compute K.")
+        print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
+    # send_k('COM36')
+    # coeffs = fit_k()
