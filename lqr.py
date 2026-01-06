@@ -37,7 +37,7 @@ def get_k(leg_length):
     L_val = leg_length / 2.0
     L_M_val = leg_length / 2.0
     Body_val = 0.2
-    l_val = -0.027
+    l_val = 0.027
     m_w_val = 0.572
     m_p_val = 0.1163
     M_val = 4.5 / 2.0
@@ -120,9 +120,7 @@ def get_k(leg_length):
     B_num = np.array(B_sym.subs(eq_point)).astype(np.float64)
 
     # 8. LQR 求解
-    # Q = np.diag([1000, 1, 100, 1, 1, 1])
-    # R_mat = np.diag([100, 1]) #  板凳减小电机输出
-    Q = np.diag([1, 1, 100, 1, 2000, 1])
+    Q = np.diag([100, 1, 600, 1, 6000, 1])
     R_mat = np.diag([100, 1]) 
     try:
         P_sol = scipy.linalg.solve_continuous_are(A_num, B_num, Q, R_mat)
@@ -136,7 +134,7 @@ def get_k(leg_length):
 # 把k矩阵输出成c数组K[12]，通过端口发送到串口上
 def send_k(COM):
     serial_port = serial.Serial(COM, baudrate=115200)
-    data = get_k(0.08 )
+    data = get_k(0.1 )
     if data is not None:
         flat_data = np.array(data).flatten()
         c_str = ", ".join([f"{x:.8f}" for x in flat_data])
@@ -155,20 +153,50 @@ def fit_k():
     for ll in leg_lengths:
         print('solve: ',float(ll))
         K = get_k(float(ll))
-        if K is not None:
-            k_values.append(np.array(K).flatten())
-        else:
-            k_values.append(np.full((12,), np.nan))
+        k_values.append(np.array(K).flatten())
     k_values = np.array(k_values)
+    k11 = k_values[:, 0]
+    k12 = k_values[:, 1]
+    k13 = k_values[:, 2]
+    k14 = k_values[:, 3]
+    k15 = k_values[:, 4]
+    k16 = k_values[:, 5]
+    k21 = k_values[:, 6]
+    k22 = k_values[:, 7]
+    k23 = k_values[:, 8]
+    k24 = k_values[:, 9]
+    k25 = k_values[:, 10]
+    k26 = k_values[:, 11]
     
-
+    a11 = np.polyfit(leg_lengths, k11, 3)
+    a12 = np.polyfit(leg_lengths, k12, 3)
+    a13 = np.polyfit(leg_lengths, k13, 3)
+    a14 = np.polyfit(leg_lengths, k14, 3)
+    a15 = np.polyfit(leg_lengths, k15, 3)
+    a16 = np.polyfit(leg_lengths, k16, 3)
+    a21 = np.polyfit(leg_lengths, k21, 3)
+    a22 = np.polyfit(leg_lengths, k22, 3)
+    a23 = np.polyfit(leg_lengths, k23, 3)
+    a24 = np.polyfit(leg_lengths, k24, 3)
+    a25 = np.polyfit(leg_lengths, k25, 3)
+    a26 = np.polyfit(leg_lengths, k26, 3)
+    
+    # 输出c语言格式 ChassisL_LQR_K_coeffs[12][4]
+    print("float ChassisL_LQR_K_coeffs[12][4] = {")
+    for a in [a11, a12, a13, a14, a15, a16, a21, a22, a23, a24, a25, a26]:
+        coeff_str = ", ".join([f"{coef:.8f}" for coef in a])
+        print(f"    {{ {coeff_str} }},")
+    print("};\n")
+    
+    return (a11, a12, a13, a14, a15, a16, a21, a22, a23, a24, a25, a26)
+    
 if __name__ == "__main__":
-    data = get_k(0.08)
-    if data is not None:
-        # 将矩阵展平为一维数组
-        flat_data = np.array(data).flatten()
-        # 格式化为 C 语言数组字符串，保留8位小数
-        c_str = ", ".join([f"{x:.8f}" for x in flat_data])
-        print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
-    # send_k('COM36')
+    # data = get_k(0.1)
+    # if data is not None:
+    #     # 将矩阵展平为一维数组
+    #     flat_data = np.array(data).flatten()
+    #     # 格式化为 C 语言数组字符串，保留8位小数
+    #     c_str = ", ".join([f"{x:.8f}" for x in flat_data])
+    #     print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
+    send_k('COM36')
     # coeffs = fit_k()

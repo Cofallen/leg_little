@@ -15,6 +15,9 @@ extern float ChassisR_LQR_K_err[12];
 extern float ChassisL_LQR_K_stand[12];
 extern float ChassisR_LQR_K_stand[12];
 
+extern float ChassisL_LQR_K_coeffs[12][4];
+extern float ChassisR_LQR_K_coeffs[12][4];
+
 typedef union
 {
     struct __packed

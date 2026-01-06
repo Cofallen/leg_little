@@ -17,7 +17,7 @@ void ChassisL_Init(Leg_Typedef *object)
     ALL_MOTOR.left_wheel.DATA.Angle_Init = ALL_MOTOR.left_wheel.DATA.Angle_Infinite;
     // Discreteness_Init(&object->Discreteness.Theta, 0.9f);
     // Discreteness_Init(&object->Discreteness.Phi, 0.9f);
-    // Discreteness_Init(&object->Discreteness.dS, 0.9f);
+    // Discreteness_Init(&object->Discreteness.dS, 0.8f);
 }
 
 void ChassisL_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
@@ -62,10 +62,10 @@ void Chassis_UpdateStateS(Leg_Typedef *Leg_l, Leg_Typedef *Leg_r, MOTOR_Typedef 
 void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, float dt)
 {   
     // 目标值获取应加上滤波 重写一个函数
-    // object->target.theta = 0.0f;
+    object->target.theta = (float)dbus->Remote.CH1_int16 / 660.0f * 1.0f;
     // object->target.theta = -0.008f;
     object->target.dtheta = 0.0f;
-    object->target.dot_s = (float)dbus->Remote.CH1_int16 / 600.0f * 1.5f;
+    object->target.dot_s = (float)dbus->Remote.CH1_int16 / 660.0f * 1.5f;
     object->target.s = Discreteness_Sum(&object->Discreteness.target_s, object->target.dot_s, dt);
     // object->target.phi = 0.0f;
     // object->target.dphi = 0.0f;
