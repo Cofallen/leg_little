@@ -89,8 +89,8 @@ void StartMoveTask(void const * argument)
     currentTimeMove = xTaskGetTickCount();
 
     osDelay(10);
-    ChassisL_Init(&Leg_l);
-    ChassisR_Init(&Leg_r);
+    ChassisL_Init(&ALL_MOTOR, &Leg_l);
+    ChassisR_Init(&ALL_MOTOR, &Leg_r);
     Vmc_Init(&Leg_l, 0.08f);
     Vmc_Init(&Leg_r, 0.08f);
 
@@ -103,8 +103,8 @@ void StartMoveTask(void const * argument)
     {
         if (WHW_V_DBUS.Remote.S2_u8 == 2)
         {
-            ChassisL_Init(&Leg_l);
-            ChassisR_Init(&Leg_r);
+            ChassisL_Init(&ALL_MOTOR, &Leg_l);
+            ChassisR_Init(&ALL_MOTOR, &Leg_r);
         }
         
         RUI_V_CONTAL.DWT_TIME.Move_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.Move_DWT_Count);
@@ -114,22 +114,17 @@ void StartMoveTask(void const * argument)
         ChassisR_UpdateState(&Leg_r, &ALL_MOTOR, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Chassis_UpdateStateS(&Leg_l, &Leg_r, &ALL_MOTOR, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Chassis_GetStatus(&Leg_l, &Leg_r);
-        // Chassis_StateHandle(&Leg_l, &Leg_r);
         ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
-        // VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
-        //                RUI_V_CONTAL.DWT_TIME.IMU_Dtime,
-        //                RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
-        //                0,Leg_l.stateSpace.phi,Leg_l.stateSpace.dphi,Leg_l.Discreteness.Phi_1.diff_num,0,
-        //                Leg_l.vmc_calc.L0[0],Leg_l.vmc_calc.phi0[0]);
-        VOFA_justfloat(RUI_V_CONTAL.DWT_TIME.Move_Dtime,
+        VOFA_justfloat((float)Leg_l.status.stand,
+                        (float)Leg_r.status.stand,
                        RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
                        Leg_l.stateSpace.theta,
                         Leg_l.stateSpace.s,
                         Leg_l.stateSpace.phi,
                         Leg_r.stateSpace.theta,
                         Leg_r.stateSpace.s,
-                        Leg_r.stateSpace.phi, Leg_l.LQR.torque_setW, Leg_r.LQR.torque_setW);
+                        Leg_r.stateSpace.phi, Leg_l.LQR.torque_setW);
 
         osDelay(1);
     }

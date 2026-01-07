@@ -5,16 +5,38 @@
 #include "vmc.h"
 #include "get_K.h"
 
-void ChassisR_Init(Leg_Typedef *object)
+float PID_S_RF[3] = {5.0f, 0.0f, 0.0f};
+float PID_P_RF[3] = {1.0f, 0.0f, 0.0f};
+float PID_S_RB[3] = {5.0f, 0.0f, 0.0f};
+float PID_P_RB[3] = {1.0f, 0.0f, 0.0f};
+
+void ChassisR_Init(MOTOR_Typedef *motor, Leg_Typedef *object)
 {   
     motor_mode(&hcan1, LEG_RF+1, 0x000, 0xfc);
     osDelay(1);
     motor_mode(&hcan1, LEG_RB+1, 0x000, 0xfc);
     osDelay(1);
     ALL_MOTOR.right_wheel.DATA.Angle_Init = ALL_MOTOR.right_wheel.DATA.Angle_Infinite;
-    // Discreteness_Init(&object->Discreteness.Theta, 0.9f);
-    // Discreteness_Init(&object->Discreteness.Phi, 0.9f);
-    // Discreteness_Init(&object->Discreteness.dS, 0.8f);
+    PID_Init(&motor->right_front.PID_P, 1.5f, 0.1f, PID_P_RF,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->right_front.PID_S, 1.8f, 0.1f, PID_S_RF,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->right_back.PID_P, 1.5f, 0.1f, PID_P_RB,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->right_back.PID_S, 1.8f, 0.1f, PID_S_RB,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
 }
 
 void ChassisR_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)

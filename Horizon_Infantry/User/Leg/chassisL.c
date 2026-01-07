@@ -7,16 +7,38 @@
 #include "get_K.h"
 #include "pid_temp.h"
 
-void ChassisL_Init(Leg_Typedef *object)
+float PID_S_LF[3] = {5.0f, 0.0f, 0.0f};
+float PID_P_LF[3] = {1.0f, 0.0f, 0.0f};
+float PID_S_LB[3] = {5.0f, 0.0f, 0.0f};
+float PID_P_LB[3] = {1.0f, 0.0f, 0.0f};
+
+void ChassisL_Init(MOTOR_Typedef *motor, Leg_Typedef *object)
 {
     motor_mode(&hcan1, LEG_LF+1, 0x000, 0xfc);
     osDelay(1);
     motor_mode(&hcan1, LEG_LB+1, 0x000, 0xfc);
     osDelay(1);
     ALL_MOTOR.left_wheel.DATA.Angle_Init = ALL_MOTOR.left_wheel.DATA.Angle_Infinite;
-    // Discreteness_Init(&object->Discreteness.Theta, 0.9f);
-    // Discreteness_Init(&object->Discreteness.Phi, 0.9f);
-    // Discreteness_Init(&object->Discreteness.dS, 0.8f);
+    PID_Init(&motor->left_front.PID_P, 1.0f, 0.1f, PID_P_LF,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->left_front.PID_S, 1.5f, 0.1f, PID_S_LF,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->left_back.PID_P, 1.0f, 0.1f, PID_P_LB,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
+    PID_Init(&motor->left_back.PID_S, 1.5f, 0.1f, PID_S_LB,
+              2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
+              Integral_Limit|OutputFilter|ErrorHandle|
+              Trapezoid_Intergral|ChangingIntegrationRate|
+              Derivative_On_Measurement|DerivativeFilter);
 }
 
 void ChassisL_UpdateState(Leg_Typedef *object, MOTOR_Typedef *motor, IMU_Data_t *imu, float dt)
@@ -134,7 +156,10 @@ void Chassis_SendTorque()
     RUI_V_CONTAL.DWT_TIME.TIM7_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.TIM7_DWT_Count);
     static uint8_t temp = 1;
     uint8_t count = 0;
-    if (temp == 1){
+    // if (Leg_l.status.stand == 0 && Leg_r.status.stand == 0)
+    // if (0)
+    // {
+      if (temp == 1){
       mit_ctrl(&hcan1, 0x01, 0,0,0,0, -Leg_l.LQR.torque_setT[0]);
       mit_ctrl(&hcan1, 0x03, 0,0,0,0, -Leg_l.LQR.torque_setT[1]);
       // mit_ctrl(&hcan1, 0x01, 0, 0, 0, 0, 0);
@@ -151,6 +176,11 @@ void Chassis_SendTorque()
       // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;
     }
+  // }
+  // else    // 错误处理函数 rotate
+  // {
+  //   Chassis_StateHandle(&Leg_l, &Leg_r);
+  // }
 }
 
 void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
@@ -178,6 +208,7 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
     Chassis_Fit_K(ChassisR_LQR_K_coeffs, right->vmc_calc.L0[POS], right->LQR.K);
 
     // 倒地自启
+    // uint8_t is_fallen = (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
     uint8_t is_fallen = (left->vmc_calc.L0[POS] >= 0.8f || right->vmc_calc.L0[POS] >= 0.8f) && (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
     uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.6f) && (fabs(right->stateSpace.theta) < 1.6f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));
     // 使用 left->status.stand 作为整车的状态标志 (0:正常, 1:倒地, 2:恢复)
@@ -229,50 +260,32 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
 
     if (machine_state == 1) // 倒地
     {
-      // left->limit.W_max = 0.0f;
-      // right->limit.W_max = 0.0f;
-      // left->target.l0 = 0.12f;
-      // right->target.l0 = 0.12f;
-      // left->limit.T_max = 1.0f;
-      // right->limit.T_max = 1.0f;
-      // // 目标theta 由当前值
-      // left->target.theta = 4.0;
-      // left->target.dtheta = Discreteness_Diff(&left->Discreteness.target_theta, left->target.theta, 0.001f);
-      // // if (left->target.theta < 1.57f)
-      // // {
-      // //   left->target.theta = 0.0f;
-      // // }
-      
-      // left->target.s = left->stateSpace.s;
-      // left->target.phi = left->stateSpace.phi;
-      // right->target.dtheta = -0.3; 
-      // right->target.s = right->stateSpace.s;
-      // right->target.phi = right->stateSpace.phi;
-      // memcpy(left->LQR.K, ChassisL_LQR_K_err, sizeof(float) * 12);
-      // memcpy(right->LQR.K, ChassisR_LQR_K_err, sizeof(float) * 12);
+      Chassis_Rotate(&ALL_MOTOR, left, right);
     }
     else if (machine_state == 2) // 恢复
     {
-      left->target.l0 = 0.06f;
-      right->target.l0 = 0.06f;
-      if (left->vmc_calc.L0[POS] <= 0.08f && right->vmc_calc.L0[POS] <= 0.08f)
-      {
-        left->target.theta = 0.0f;
-        right->target.theta = 0.0f;
-        left->target.s = left->stateSpace.s;
-        right->target.s = right->stateSpace.s;
-        left->target.phi = 0;
-        right->target.phi = 0;
-        memcpy(&left->LQR.K, ChassisL_LQR_K_stand, sizeof(float) * 12);
-        memcpy(&right->LQR.K, ChassisR_LQR_K_stand, sizeof(float) * 12);
-      }
+      // left->target.l0 = 0.06f;
+      // right->target.l0 = 0.06f;
+      // if (left->vmc_calc.L0[POS] <= 0.08f && right->vmc_calc.L0[POS] <= 0.08f)
+      // {
+      //   left->target.theta = 0.0f;
+      //   right->target.theta = 0.0f;
+      //   left->target.s = left->stateSpace.s;
+      //   right->target.s = right->stateSpace.s;
+      //   left->target.phi = 0;
+      //   right->target.phi = 0;
+      //   memcpy(&left->LQR.K, ChassisL_LQR_K_stand, sizeof(float) * 12);
+      //   memcpy(&right->LQR.K, ChassisR_LQR_K_stand, sizeof(float) * 12);
+      // }
       
       // 轮子给小，防止飞出
-      left->limit.W_max = 0.0f;
-      right->limit.W_max = 0.0f;
+      // left->limit.W_max = 0.3f;
+      // right->limit.W_max = 0.3f;
       // // 腿部正常
       // left->limit.T_max = 0;
       // right->limit.T_max = 0;
+      Chassis_Rotate(&ALL_MOTOR, left, right);
+
     }
     else // 正常
     {
@@ -281,4 +294,60 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
       left->limit.T_max = MAX_TORQUE_LEG_T;
       right->limit.T_max = MAX_TORQUE_LEG_T;
     }
+}
+
+// 获取目标值，使用规划
+// 先一定速度旋转一定时间，后过零点后采用位置控制
+static void getAim(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
+{
+  motor->left_front.DATA.aim = -1.0f; // 设定0.2rad/s
+  if (left->stateSpace.theta >= 0.0f && left->stateSpace.theta <= 1.25f)
+  {
+    motor->left_front.DATA.aim = 0.0; // 最终位置
+  }
+  motor->left_back.DATA.aim = -1.0f; // 设定0.2rad/s
+  if (left->stateSpace.theta >= 0.0f && left->stateSpace.theta <= 1.25f)
+  {
+    motor->left_back.DATA.aim = 0.0f; // 最终位置
+  }
+  motor->right_front.DATA.aim = 1.0f; // 设定0.2rad/s
+  // if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
+  // {
+  //   motor->right_front.DATA.aim = 0.0f; // 最终位置
+  // }
+  motor->right_back.DATA.aim = 1.0f; // 设定0.2rad/s
+  // if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
+  // {
+  //   motor->right_back.DATA.aim = 0.0f; // 最终位置
+  // }
+}
+
+// 正常后清除目标值
+static void ClearAim(MOTOR_Typedef *motor)
+{
+  motor->left_front.DATA.aim = 0.0f;
+  motor->right_front.DATA.aim = 0.0f;
+  motor->left_back.DATA.aim = 0.0f;
+  motor->right_back.DATA.aim = 0.0f;
+}
+
+
+// 倒地后旋转腿，采用pid测试
+void Chassis_Rotate(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
+{
+  // getAim(motor, left, right);
+  // PID_Calculate(&motor->left_front.PID_S, motor->left_front.DATA.vel, motor->left_front.DATA.aim);
+  // PID_Calculate(&motor->left_back.PID_S, motor->left_back.DATA.vel, motor->left_back.DATA.aim);
+  // PID_Calculate(&motor->right_front.PID_S, motor->right_front.DATA.vel, motor->right_front.DATA.aim);
+  // PID_Calculate(&motor->right_back.PID_S, motor->right_back.DATA.vel, motor->right_back.DATA.aim);
+
+  // mit_ctrl(&hcan1, LEG_LF+1, 0, 0, 0, 0, motor->left_front.PID_S.Output);
+  // mit_ctrl(&hcan1, LEG_LB+1, 0, 0, 0, 0, motor->left_back.PID_S.Output);
+  // mit_ctrl(&hcan1, LEG_RF+1, 0, 0, 0, 0, motor->right_front.PID_S.Output);
+  // mit_ctrl(&hcan1, LEG_RB+1, 0, 0, 0, 0, motor->right_back.PID_S.Output);
+
+  // mit_ctrl(&hcan1, LEG_LF+1, 0, 0, 0, 0, 0);
+  // mit_ctrl(&hcan1, LEG_LB+1, 0, 0, 0, 0, 0);
+  // mit_ctrl(&hcan1, LEG_RF+1, 0, 0, 0, 0, 0);
+  // mit_ctrl(&hcan1, LEG_RB+1, 0, 0, 0, 0, 0);
 }

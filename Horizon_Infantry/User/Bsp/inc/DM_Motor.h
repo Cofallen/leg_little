@@ -39,6 +39,7 @@ typedef struct
     float Tmos;
     float Tcoil;
     int8_t ONLINE_JUDGE_TIME;
+    float aim;
 }DM_MOTOR_DATA_Typdef;
 
 typedef struct
