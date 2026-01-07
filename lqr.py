@@ -120,8 +120,8 @@ def get_k(leg_length):
     B_num = np.array(B_sym.subs(eq_point)).astype(np.float64)
 
     # 8. LQR 求解
-    Q = np.diag([100, 1, 600, 1, 6000, 1])
-    R_mat = np.diag([100, 1]) 
+    Q = np.diag([1, 1, 1000, 1, 6000, 1])
+    R_mat = np.diag([200, 1]) 
     try:
         P_sol = scipy.linalg.solve_continuous_are(A_num, B_num, Q, R_mat)
         K = np.linalg.inv(R_mat) @ B_num.T @ P_sol
@@ -198,5 +198,5 @@ if __name__ == "__main__":
     #     # 格式化为 C 语言数组字符串，保留8位小数
     #     c_str = ", ".join([f"{x:.8f}" for x in flat_data])
     #     print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
-    send_k('COM36')
-    # coeffs = fit_k()
+    # send_k('COM36')
+    coeffs = fit_k()
