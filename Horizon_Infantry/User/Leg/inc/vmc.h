@@ -24,11 +24,13 @@
 #define ACC 2
 
 #define MAX_TORQUE_LEG_T 6.0f
-#define MAX_TORQUE_LEG_W 4.0f
+#define MAX_TORQUE_LEG_W 20.0f
 #define MAX_LEG_LENGTH 0.17f
 #define MIN_LEG_LENGTH 0.085f
 
 #define REDUCTION_RATIO 15.764705882352941176470588235294f   // 268/17
+// #define TORQUE_RATE 0.06894876031507928693743672227522f      // 含减速箱0.92
+#define TORQUE_RATE 1.0f      // 含减速箱0.92
 
 typedef struct 
 {

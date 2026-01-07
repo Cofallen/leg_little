@@ -1,5 +1,6 @@
 #include "mymath.h"
 #include "Motors.h"
+#include "vmc.h"
 
 void Discreteness_Init(Discreteness_TypeDef *object, float alpha)
 {
@@ -42,10 +43,10 @@ void DJI_Torque_Control(hcan_t* hcan, uint16_t stdid, float t1, float t2, float 
     uint8_t Data[8];
 
     int16_t num1, num2, num3, num4;
-    num1 = (int16_t)(t1 * TUEQUE2NUM );
-    num2 = (int16_t)(t2 * TUEQUE2NUM );
-    num3 = (int16_t)(t3 * TUEQUE2NUM );
-    num4 = (int16_t)(t4 * TUEQUE2NUM );
+    num1 = (int16_t)(t1 * TUEQUE2NUM * TORQUE_RATE);
+    num2 = (int16_t)(t2 * TUEQUE2NUM * TORQUE_RATE);
+    num3 = (int16_t)(t3 * TUEQUE2NUM * TORQUE_RATE);
+    num4 = (int16_t)(t4 * TUEQUE2NUM * TORQUE_RATE);
     Data[0] = ((num1) >> 8);
     Data[1] = (num1);
     Data[2] = ((num2) >> 8);

@@ -121,7 +121,7 @@ def get_k(leg_length):
 
     # 8. LQR 求解
     Q = np.diag([1, 1, 1000, 1, 6000, 1])
-    R_mat = np.diag([200, 1]) 
+    R_mat = np.diag([20, 1]) 
     try:
         P_sol = scipy.linalg.solve_continuous_are(A_num, B_num, Q, R_mat)
         K = np.linalg.inv(R_mat) @ B_num.T @ P_sol
