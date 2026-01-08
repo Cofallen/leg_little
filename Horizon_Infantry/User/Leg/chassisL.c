@@ -138,13 +138,6 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     // (object->LQR.torque_setT[1] > object->limit.T_max) ? (object->LQR.torque_setT[1] = object->limit.T_max) : (object->LQR.torque_setT[1] < -object->limit.T_max) ? (object->LQR.torque_setT[1] = -object->limit.T_max) : 0;
     // (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setT[0] < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
 
-    if (dbus->Remote.S2_u8 == 1)
-    {
-      object->LQR.torque_setT[0] = 0.0f;
-      object->LQR.torque_setT[1] = 0.0f;
-      object->LQR.torque_setW = 0.0f;
-    }
-    
     (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = -MAX_TORQUE_LEG_T) : 0;
     (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = -MAX_TORQUE_LEG_T) : 0;
     (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < -MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = -MAX_TORQUE_LEG_W) : 0;
@@ -156,32 +149,56 @@ void Chassis_SendTorque()
     RUI_V_CONTAL.DWT_TIME.TIM7_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.TIM7_DWT_Count);
     static uint8_t temp = 1;
     uint8_t count = 0;
-    // if (Leg_l.status.stand == 0 && Leg_r.status.stand == 0)
-    // if (0)
-    // {
-      if (temp == 1){
-      mit_ctrl(&hcan1, 0x01, 0,0,0,0, -Leg_l.LQR.torque_setT[0]);
-      mit_ctrl(&hcan1, 0x03, 0,0,0,0, -Leg_l.LQR.torque_setT[1]);
+    Chassis_GetTorque(&ALL_MOTOR, &Leg_l, &Leg_r, &WHW_V_DBUS);
+    if (temp == 1){
+      mit_ctrl(&hcan1, 0x01, 0,0,0,0, Leg_l.torque_send.T1);
+      mit_ctrl(&hcan1, 0x03, 0,0,0,0, Leg_l.torque_send.T2);
       // mit_ctrl(&hcan1, 0x01, 0, 0, 0, 0, 0);
       // mit_ctrl(&hcan1, 0x03, 0, 0, 0, 0, 0);
       // DJI_Torque_Control(&hcan2, 0x200, 0.0f, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
       // DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, 0.0f, 0.0f);
-      DJI_Torque_Control(&hcan2, 0x200, -Leg_r.LQR.torque_setW, 0.0f, Leg_l.LQR.torque_setW, 0.0f);
+      DJI_Torque_Control(&hcan2, 0x200, Leg_r.torque_send.Tw, 0.0f, Leg_l.torque_send.Tw, 0.0f);
       temp = -temp;
     }
     else{
-      mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.LQR.torque_setT[0]);
-      mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.LQR.torque_setT[1]);
+      mit_ctrl(&hcan1, 0x02, 0,0,0,0, Leg_r.torque_send.T1);
+      mit_ctrl(&hcan1, 0x04, 0,0,0,0, Leg_r.torque_send.T2);
       // mit_ctrl(&hcan1, 0x02, 0,0,0,0, 0);
       // mit_ctrl(&hcan1, 0x04, 0,0,0,0, 0);
       temp = -temp;
     }
-  // }
-  // else    // 错误处理函数 rotate
-  // {
-  //   Chassis_StateHandle(&Leg_l, &Leg_r);
-  // }
 }
+
+// 决定输出力矩，选择
+static void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
+{
+  left->torque_send.T1 = -Leg_l.LQR.torque_setT[0];
+  left->torque_send.T2 = -Leg_l.LQR.torque_setT[1];
+  left->torque_send.Tw =  Leg_l.LQR.torque_setW;
+  right->torque_send.T1 = Leg_r.LQR.torque_setT[0];
+  right->torque_send.T2 = Leg_r.LQR.torque_setT[1];
+  right->torque_send.Tw = -Leg_r.LQR.torque_setW;
+
+  if (dbus->Remote.S2_u8 == 1)    // 离线
+  {
+    left->torque_send.T1 = 0.0f;
+    left->torque_send.T2 = 0.0f;
+    left->torque_send.Tw = 0.0f;
+    right->torque_send.T1 = 0.0f;
+    right->torque_send.T2 = 0.0f;
+    right->torque_send.Tw = 0.0f;
+  }
+  else if (dbus->Remote.S1_u8 == 3)   // 模拟倒地
+  {
+    left->torque_send.T1 = motor->left_front.PID_S.Output;
+    left->torque_send.T2 = motor->left_back.PID_S.Output;
+    left->torque_send.Tw = 0.0f;
+    right->torque_send.T1 = motor->right_front.PID_S.Output;
+    right->torque_send.T2 = motor->right_back.PID_S.Output;
+    right->torque_send.Tw = 0.0f;
+  }
+}
+
 
 void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
 { 
@@ -335,19 +352,15 @@ static void ClearAim(MOTOR_Typedef *motor)
 // 倒地后旋转腿，采用pid测试
 void Chassis_Rotate(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
 {
-  // getAim(motor, left, right);
-  // PID_Calculate(&motor->left_front.PID_S, motor->left_front.DATA.vel, motor->left_front.DATA.aim);
-  // PID_Calculate(&motor->left_back.PID_S, motor->left_back.DATA.vel, motor->left_back.DATA.aim);
-  // PID_Calculate(&motor->right_front.PID_S, motor->right_front.DATA.vel, motor->right_front.DATA.aim);
-  // PID_Calculate(&motor->right_back.PID_S, motor->right_back.DATA.vel, motor->right_back.DATA.aim);
+  getAim(motor, left, right);
+  PID_Calculate(&motor->left_front.PID_S, motor->left_front.DATA.vel, motor->left_front.DATA.aim);
+  PID_Calculate(&motor->left_back.PID_S, motor->left_back.DATA.vel, motor->left_back.DATA.aim);
+  PID_Calculate(&motor->right_front.PID_S, motor->right_front.DATA.vel, motor->right_front.DATA.aim);
+  PID_Calculate(&motor->right_back.PID_S, motor->right_back.DATA.vel, motor->right_back.DATA.aim);
 
   // mit_ctrl(&hcan1, LEG_LF+1, 0, 0, 0, 0, motor->left_front.PID_S.Output);
   // mit_ctrl(&hcan1, LEG_LB+1, 0, 0, 0, 0, motor->left_back.PID_S.Output);
   // mit_ctrl(&hcan1, LEG_RF+1, 0, 0, 0, 0, motor->right_front.PID_S.Output);
   // mit_ctrl(&hcan1, LEG_RB+1, 0, 0, 0, 0, motor->right_back.PID_S.Output);
 
-  // mit_ctrl(&hcan1, LEG_LF+1, 0, 0, 0, 0, 0);
-  // mit_ctrl(&hcan1, LEG_LB+1, 0, 0, 0, 0, 0);
-  // mit_ctrl(&hcan1, LEG_RF+1, 0, 0, 0, 0, 0);
-  // mit_ctrl(&hcan1, LEG_RB+1, 0, 0, 0, 0, 0);
 }

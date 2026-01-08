@@ -127,6 +127,14 @@ typedef struct
         float T_max;
         float W_max;
     }limit;
+
+    struct 
+    {
+        float T1;
+        float T2;
+        float Tw;
+    }torque_send;
+    
     
 }Leg_Typedef;
 
