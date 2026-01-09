@@ -22,7 +22,7 @@ void ChassisR_Init(MOTOR_Typedef *motor, Leg_Typedef *object)
               Integral_Limit|OutputFilter|ErrorHandle|
               Trapezoid_Intergral|ChangingIntegrationRate|
               Derivative_On_Measurement|DerivativeFilter);
-    PID_Init(&motor->right_front.PID_S, 1.8f, 0.1f, PID_S_RF,
+    PID_Init(&motor->right_front.PID_S, 1.5f, 0.1f, PID_S_RF,
               2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
               Integral_Limit|OutputFilter|ErrorHandle|
               Trapezoid_Intergral|ChangingIntegrationRate|
@@ -32,7 +32,7 @@ void ChassisR_Init(MOTOR_Typedef *motor, Leg_Typedef *object)
               Integral_Limit|OutputFilter|ErrorHandle|
               Trapezoid_Intergral|ChangingIntegrationRate|
               Derivative_On_Measurement|DerivativeFilter);
-    PID_Init(&motor->right_back.PID_S, 1.8f, 0.1f, PID_S_RB,
+    PID_Init(&motor->right_back.PID_S, 1.5f, 0.1f, PID_S_RB,
               2000.0f, 1000.0f, 0.7f, 0.7f, 2, 
               Integral_Limit|OutputFilter|ErrorHandle|
               Trapezoid_Intergral|ChangingIntegrationRate|

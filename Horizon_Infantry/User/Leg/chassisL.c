@@ -328,15 +328,15 @@ static void getPIDAim(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *righ
     motor->left_back.DATA.aim = 0.0f; // 最终位置
   }
   motor->right_front.DATA.aim = 1.0f; // 设定0.2rad/s
-  // if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
-  // {
-  //   motor->right_front.DATA.aim = 0.0f; // 最终位置
-  // }
+  if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
+  {
+    motor->right_front.DATA.aim = 0.0f; // 最终位置
+  }
   motor->right_back.DATA.aim = 1.0f; // 设定0.2rad/s
-  // if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
-  // {
-  //   motor->right_back.DATA.aim = 0.0f; // 最终位置
-  // }
+  if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
+  {
+    motor->right_back.DATA.aim = 0.0f; // 最终位置
+  }
 }
 
 // 正常后清除目标值
