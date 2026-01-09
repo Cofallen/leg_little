@@ -117,6 +117,7 @@ void StartMoveTask(void const * argument)
         Chassis_StateHandle(&Leg_l, &Leg_l);
         ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
+        Chassis_GetTorque(&ALL_MOTOR, &Leg_l, &Leg_r, &WHW_V_DBUS);
         VOFA_justfloat((float)Leg_l.status.stand,
                         (float)Leg_r.status.stand,
                        (float)WHW_V_DBUS.Remote.S1_u8,
@@ -127,8 +128,8 @@ void StartMoveTask(void const * argument)
                         Leg_r.stateSpace.s,
                         Leg_r.stateSpace.phi, Leg_l.LQR.torque_setW);
 
-        // VOFA_justfloat( Leg_l.stateSpace.theta,
-        //                 Leg_r.stateSpace.theta,
+        // VOFA_justfloat( RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
+        //                  RUI_V_CONTAL.DWT_TIME.Move_Dtime,    
         //                 Leg_l.LQR.torque_setW,
         //                 Leg_r.LQR.torque_setW,
         //                 Leg_l.LQR.K[0] * (Leg_l.stateSpace.theta - Leg_l.target.theta),

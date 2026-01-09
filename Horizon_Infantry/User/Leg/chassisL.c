@@ -137,7 +137,12 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     // (object->LQR.torque_setT[0] > object->limit.T_max) ? (object->LQR.torque_setT[0] = object->limit.T_max) : (object->LQR.torque_setT[0] < -object->limit.T_max) ? (object->LQR.torque_setT[0] = -object->limit.T_max) : 0;
     // (object->LQR.torque_setT[1] > object->limit.T_max) ? (object->LQR.torque_setT[1] = object->limit.T_max) : (object->LQR.torque_setT[1] < -object->limit.T_max) ? (object->LQR.torque_setT[1] = -object->limit.T_max) : 0;
     // (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setT[0] < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
-
+    if (dbus->Remote.S2_u8 == 1)
+    {
+      object->LQR.torque_setT[0] = 0.0f;
+      object->LQR.torque_setT[1] = 0.0f;
+      object->LQR.torque_setW = 0.0f;
+    }
     (object->LQR.torque_setT[0] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[0] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[0] = -MAX_TORQUE_LEG_T) : 0;
     (object->LQR.torque_setT[1] > MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = MAX_TORQUE_LEG_T) : (object->LQR.torque_setT[1] < -MAX_TORQUE_LEG_T) ? (object->LQR.torque_setT[1] = -MAX_TORQUE_LEG_T) : 0;
     (object->LQR.torque_setW > MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = MAX_TORQUE_LEG_W) : (object->LQR.torque_setW < -MAX_TORQUE_LEG_W) ? (object->LQR.torque_setW = -MAX_TORQUE_LEG_W) : 0;
@@ -149,7 +154,6 @@ void Chassis_SendTorque()
     RUI_V_CONTAL.DWT_TIME.TIM7_Dtime = DWT_GetDeltaT(&RUI_V_CONTAL.DWT_TIME.TIM7_DWT_Count);
     static uint8_t temp = 1;
     uint8_t count = 0;
-    Chassis_GetTorque(&ALL_MOTOR, &Leg_l, &Leg_r, &WHW_V_DBUS);
     if (temp == 1){
       mit_ctrl(&hcan1, 0x01, 0,0,0,0, Leg_l.torque_send.T1);
       mit_ctrl(&hcan1, 0x03, 0,0,0,0, Leg_l.torque_send.T2);
@@ -170,14 +174,14 @@ void Chassis_SendTorque()
 }
 
 // 决定输出力矩，选择
-static void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
+void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
 {
-  left->torque_send.T1  = -Leg_l.LQR.torque_setT[0];
-  left->torque_send.T2  = -Leg_l.LQR.torque_setT[1];
-  left->torque_send.Tw  =  Leg_l.LQR.torque_setW;
-  right->torque_send.T1 = Leg_r.LQR.torque_setT[0];
-  right->torque_send.T2 = Leg_r.LQR.torque_setT[1];
-  right->torque_send.Tw = -Leg_r.LQR.torque_setW;
+  left->torque_send.T1  = -left->LQR.torque_setT[0];
+  left->torque_send.T2  = -left->LQR.torque_setT[1];
+  left->torque_send.Tw  =  left->LQR.torque_setW;
+  right->torque_send.T1 =  right->LQR.torque_setT[0];
+  right->torque_send.T2 =  right->LQR.torque_setT[1];
+  right->torque_send.Tw = -right->LQR.torque_setW;
 
   if (dbus->Remote.S2_u8 == 1)    // 离线
   {
@@ -188,7 +192,7 @@ static void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typed
     right->torque_send.T2 = 0.0f;
     right->torque_send.Tw = 0.0f;
   }
-  else if (dbus->Remote.S1_u8 == 3)   // 模拟倒地
+  else if (left->status.stand == 1 || right->status.stand == 1)   // 模拟倒地
   {
     left->torque_send.T1 = motor->left_front.PID_S.Output;
     left->torque_send.T2 = motor->left_back.PID_S.Output;
@@ -321,21 +325,25 @@ static void getPIDAim(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *righ
   if (left->stateSpace.theta >= 0.0f && left->stateSpace.theta <= 1.25f)
   {
     motor->left_front.DATA.aim = 0.0; // 最终位置
+    motor->left_front.PID_S.Output = 0.0f;
   }
   motor->left_back.DATA.aim = -1.0f; // 设定0.2rad/s
   if (left->stateSpace.theta >= 0.0f && left->stateSpace.theta <= 1.25f)
   {
     motor->left_back.DATA.aim = 0.0f; // 最终位置
+    motor->left_back.PID_S.Output = 0.0f;
   }
   motor->right_front.DATA.aim = 1.0f; // 设定0.2rad/s
   if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
   {
     motor->right_front.DATA.aim = 0.0f; // 最终位置
+    motor->right_front.PID_S.Output = 0.0f;
   }
   motor->right_back.DATA.aim = 1.0f; // 设定0.2rad/s
   if (right->stateSpace.theta >= 0.0f && right->stateSpace.theta <= 1.25f)
   {
     motor->right_back.DATA.aim = 0.0f; // 最终位置
+    motor->right_back.PID_S.Output = 0.0f;
   }
 }
 
@@ -363,4 +371,31 @@ void Chassis_Rotate(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
   // mit_ctrl(&hcan1, LEG_RF+1, 0, 0, 0, 0, motor->right_front.PID_S.Output);
   // mit_ctrl(&hcan1, LEG_RB+1, 0, 0, 0, 0, motor->right_back.PID_S.Output);
 
+}
+
+// 速度规划，用于获取速度实际值
+float Chassis_SpeedPlan(float speed_target, float a_max, float T, float dt, Leg_Typedef *left, Leg_Typedef *right)
+{
+  static float t = 0.0f;  // 用于总时间
+  if (fabsf(speed_target - left->stateSpace.dot_s) < 0.01f && fabsf(speed_target - right->stateSpace.dot_s) < 0.01f)
+  {
+    t = 0.0f;
+    return speed_target;
+  }
+
+  float speed_out = 0.0f, k = 0.0f;
+  if (speed_target > 0)
+  {
+    t += dt;
+    k = a_max / T;
+    speed_out = -1.0f / 2.0f * k * k * t * t + a_max * t;
+    return speed_out;
+  }
+  if (speed_target < 0)
+  {
+    t += dt;
+    k = a_max / T;
+    speed_out = 1.0f / 2.0f * k * k * t * t - a_max * t;
+    return speed_out;
+  }
 }
