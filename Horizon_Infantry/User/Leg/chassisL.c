@@ -172,9 +172,9 @@ void Chassis_SendTorque()
 // 决定输出力矩，选择
 static void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
 {
-  left->torque_send.T1 = -Leg_l.LQR.torque_setT[0];
-  left->torque_send.T2 = -Leg_l.LQR.torque_setT[1];
-  left->torque_send.Tw =  Leg_l.LQR.torque_setW;
+  left->torque_send.T1  = -Leg_l.LQR.torque_setT[0];
+  left->torque_send.T2  = -Leg_l.LQR.torque_setT[1];
+  left->torque_send.Tw  =  Leg_l.LQR.torque_setW;
   right->torque_send.T1 = Leg_r.LQR.torque_setT[0];
   right->torque_send.T2 = Leg_r.LQR.torque_setT[1];
   right->torque_send.Tw = -Leg_r.LQR.torque_setW;
@@ -315,7 +315,7 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
 
 // 获取目标值，使用规划
 // 先一定速度旋转一定时间，后过零点后采用位置控制
-static void getAim(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
+static void getPIDAim(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
 {
   motor->left_front.DATA.aim = -1.0f; // 设定0.2rad/s
   if (left->stateSpace.theta >= 0.0f && left->stateSpace.theta <= 1.25f)
@@ -352,7 +352,7 @@ static void ClearAim(MOTOR_Typedef *motor)
 // 倒地后旋转腿，采用pid测试
 void Chassis_Rotate(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right)
 {
-  getAim(motor, left, right);
+  getPIDAim(motor, left, right);
   PID_Calculate(&motor->left_front.PID_S, motor->left_front.DATA.vel, motor->left_front.DATA.aim);
   PID_Calculate(&motor->left_back.PID_S, motor->left_back.DATA.vel, motor->left_back.DATA.aim);
   PID_Calculate(&motor->right_front.PID_S, motor->right_front.DATA.vel, motor->right_front.DATA.aim);
