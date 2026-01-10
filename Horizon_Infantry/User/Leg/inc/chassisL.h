@@ -11,7 +11,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
 void Chassis_SendTorque();
 void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right);
 void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right);
-void Chassis_Rotate(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right);
+void Chassis_Rotate(MOTOR_Typedef *motor);
 void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus);
 
 #endif // !__CHASSISL_H
