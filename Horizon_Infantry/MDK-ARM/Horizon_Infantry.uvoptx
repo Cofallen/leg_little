@@ -159,7 +159,7 @@
           <Type>0</Type>
           <LineNumber>353</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>134307184</Address>
+          <Address>134307704</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -175,7 +175,7 @@
           <Type>0</Type>
           <LineNumber>350</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>134307164</Address>
+          <Address>134307684</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -191,7 +191,7 @@
           <Type>0</Type>
           <LineNumber>344</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>134307078</Address>
+          <Address>134307598</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -207,7 +207,7 @@
           <Type>0</Type>
           <LineNumber>347</LineNumber>
           <EnabledFlag>0</EnabledFlag>
-          <Address>134307098</Address>
+          <Address>134307618</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -217,6 +217,22 @@
           <Filename>..\User\Leg\chassisL.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\Horizon_Infantry\../User/Leg/chassisL.c\347</Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>325</LineNumber>
+          <EnabledFlag>0</EnabledFlag>
+          <Address>134228264</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>..\User\Leg\chassisL.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\Horizon_Infantry\../User/Leg/chassisL.c\325</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>

@@ -136,7 +136,7 @@ void ChassisL_Control(Leg_Typedef *object, DBUS_Typedef *dbus, IMU_Data_t *imu, 
     // 限幅
     (object->LQR.torque_setT[0] > object->limit.T_max) ? (object->LQR.torque_setT[0] = object->limit.T_max) : (object->LQR.torque_setT[0] < -object->limit.T_max) ? (object->LQR.torque_setT[0] = -object->limit.T_max) : 0;
     (object->LQR.torque_setT[1] > object->limit.T_max) ? (object->LQR.torque_setT[1] = object->limit.T_max) : (object->LQR.torque_setT[1] < -object->limit.T_max) ? (object->LQR.torque_setT[1] = -object->limit.T_max) : 0;
-    (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setT[0] < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
+    (object->LQR.torque_setW > object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : (object->LQR.torque_setW < -object->limit.W_max) ? (object->LQR.torque_setW = -object->limit.W_max) : 0;
     // if (dbus->Remote.S2_u8 == 1)
     // {
     //   object->LQR.torque_setT[0] = 0.0f;
@@ -240,7 +240,7 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
     // 倒地自启
     // uint8_t is_fallen = (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
     uint8_t is_fallen = (left->vmc_calc.L0[POS] >= 0.8f || right->vmc_calc.L0[POS] >= 0.8f) && (fabs(left->stateSpace.theta) >= 1.2f) || (fabs(right->stateSpace.theta) >= 1.2f);
-    uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.6f) && (fabs(right->stateSpace.theta) < 1.6f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));
+    uint8_t can_recover = (fabs(left->stateSpace.theta) < 1.2f) && (fabs(right->stateSpace.theta) < 1.2f) && ((left->stateSpace.theta > 0) && (right->stateSpace.theta > 0));
     // 使用 left->status.stand 作为整车的状态标志 (0:正常, 1:倒地, 2:恢复)
     switch (left->status.stand)
     {
@@ -269,7 +269,7 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right)
       // {
         left->status.stand_count++;
         right->status.stand_count++;
-        if (left->status.stand_count >= 50000 || right->status.stand_count >= 50000)
+        if (left->status.stand_count >= 500 || right->status.stand_count >= 500)
         {
           left->status.stand_count = 0;
           right->status.stand_count = 0;
@@ -301,21 +301,21 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
       // 1. 收腿
       left->target.l0 = 0.08f;
       right->target.l0 = 0.08f;
-      memcpy(&left->LQR.K, ChassisL_LQR_K_stand, sizeof(float) * 12);
-      memcpy(&right->LQR.K, ChassisR_LQR_K_stand, sizeof(float) * 12);
-      if (fabsf(left->stateSpace.theta) <= 0.5f || fabsf(right->stateSpace.theta ) <= 0.5f)
+      memcpy(left->LQR.K, ChassisL_LQR_K_stand, sizeof(float) * 12);
+      memcpy(right->LQR.K, ChassisR_LQR_K_stand, sizeof(float) * 12);
+      if (fabsf(left->stateSpace.theta) <= 0.2f || fabsf(right->stateSpace.theta ) <= 0.2f)
       {
-        left->limit.T_max = 0.5f;
-        right->limit.T_max = 0.5f;
-        left->limit.W_max = 0.1f;
-        right->limit.W_max = 0.1f;
+        // left->limit.T_max = 0.0f;
+        // right->limit.T_max = 0.0f;
+        // left->limit.W_max = 0.0f;
+        // right->limit.W_max = 0.0f;
       }
       else
       {
-        left->limit.T_max = 1.5f;
-        right->limit.T_max = 1.5f;
-        left->limit.W_max = 0.5f;
-        right->limit.W_max = 0.5f;
+        left->limit.T_max = 1.0f;
+        right->limit.T_max = 1.0f;
+        left->limit.W_max = 0.4f;
+        right->limit.W_max = 0.4f;
       }
       time++;
       // 2. 轮电机摆动，髋关节失能
@@ -338,26 +338,26 @@ void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right)
 // 先一定速度旋转一定时间，后过零点后采用位置控制
 static void getPIDAim(MOTOR_Typedef *motor)
 {
-  motor->left_front.DATA.aim = -1.0f; // 设定0.2rad/s
-  if (Leg_l.stateSpace.theta >= 0.0f && Leg_l.stateSpace.theta <= 1.25f)
+  motor->left_front.DATA.aim = -1.5f; // 设定0.2rad/s
+  if (Leg_l.stateSpace.theta >= 0.0f && Leg_l.stateSpace.theta <= 1.2f)
   {
     motor->left_front.DATA.aim = 0.0; // 最终位置
     motor->left_front.PID_S.Output = 0.0f;
   }
-  motor->left_back.DATA.aim = -1.0f; // 设定0.2rad/s
-  if (Leg_l.stateSpace.theta >= 0.0f && Leg_l.stateSpace.theta <= 1.25f)
+  motor->left_back.DATA.aim = -1.5f; // 设定0.2rad/s
+  if (Leg_l.stateSpace.theta >= 0.0f && Leg_l.stateSpace.theta <= 1.2f)
   {
     motor->left_back.DATA.aim = 0.0f; // 最终位置
     motor->left_back.PID_S.Output = 0.0f;
   }
-  motor->right_front.DATA.aim = 1.0f; // 设定0.2rad/s
-  if (Leg_r.stateSpace.theta >= 0.0f && Leg_r.stateSpace.theta <= 1.35f)
+  motor->right_front.DATA.aim = 1.5f; // 设定0.2rad/s
+  if (Leg_r.stateSpace.theta >= 0.0f && Leg_r.stateSpace.theta <= 1.2f)
   {
     motor->right_front.DATA.aim = 0.0f; // 最终位置
     motor->right_front.PID_S.Output = 0.0f;
   }
-  motor->right_back.DATA.aim = 1.0f; // 设定0.2rad/s
-  if (Leg_r.stateSpace.theta >= 0.0f && Leg_r.stateSpace.theta <= 1.35f)
+  motor->right_back.DATA.aim = 1.5f; // 设定0.2rad/s
+  if (Leg_r.stateSpace.theta >= 0.0f && Leg_r.stateSpace.theta <= 1.2f)
   {
     motor->right_back.DATA.aim = 0.0f; // 最终位置
     motor->right_back.PID_S.Output = 0.0f;
