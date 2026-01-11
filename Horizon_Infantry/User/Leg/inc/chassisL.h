@@ -13,5 +13,6 @@ void Chassis_GetStatus(Leg_Typedef *left, Leg_Typedef *right);
 void Chassis_StateHandle(Leg_Typedef *left, Leg_Typedef *right);
 void Chassis_Rotate(MOTOR_Typedef *motor);
 void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus);
+void Chassis_Jump(Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus);
 
 #endif // !__CHASSISL_H

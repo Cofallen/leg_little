@@ -416,3 +416,85 @@ float Chassis_SpeedPlan(float speed_target, float a_max, float T, float dt, Leg_
     return speed_out;
   }
 }
+
+
+
+// 压缩 蹬腿 收腿 伸腿
+typedef enum {
+  idle = 0,
+  compact,
+  flight,
+  retract,
+  extend
+}JumpState_t;
+
+uint8_t state = 0;
+
+uint8_t s1[2] = {0};
+
+void Chassis_Jump(Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
+{
+  // VOFA_justfloat((float)s1[0], (float)s1[1],
+  //                (float)state,
+  //                left->vmc_calc.L0[POS],
+  //                right->vmc_calc.L0[POS],
+  //               left->target.l0,
+  //               right->target.l0,
+  //               0,0,0);
+  s1[0] = dbus->Remote.S1_u8;
+  if (s1[0] == 2 && s1[1] == 3)
+  {
+    state = compact;
+  }
+  s1[1] = s1[0];
+  if (s1[0] == 3)
+  {
+    state = idle;
+  }
+  
+  switch (state)
+  {
+  case idle:
+    break;
+  
+  case compact:
+    left->target.l0 -= 0.001f;
+    right->target.l0 -= 0.001f;
+    if (left->vmc_calc.L0[POS] <= 0.1f && right->vmc_calc.L0[POS] <= 0.1f)
+    {
+      state = flight;
+    }
+    break;
+
+  case flight:
+    left->target.l0 += 0.002f;
+    right->target.l0 += 0.002f;
+    if (left->vmc_calc.L0[POS] >= 0.16f && right->vmc_calc.L0[POS] >= 0.16f)
+    {
+      state = retract;
+    }
+    break;
+
+  case retract:
+    left->target.l0 -= 0.001f;
+    right->target.l0 -= 0.001f;
+    if (left->vmc_calc.L0[POS] <= 0.11f && right->vmc_calc.L0[POS] <= 0.11f)
+    {
+      state = extend;
+    }
+    break;
+
+  case extend:
+    left->target.l0 += 0.001f;
+    right->target.l0 += 0.001f;
+    if (left->vmc_calc.L0[POS] >= 0.14f && right->vmc_calc.L0[POS] >= 0.14f)
+    {
+      state = idle;
+    }
+    break;
+
+  default:
+    state = idle;
+    break;
+  }
+}
