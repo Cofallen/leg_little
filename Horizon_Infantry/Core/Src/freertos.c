@@ -137,7 +137,7 @@ void MX_FREERTOS_Init(void) {
   RobotUITaskHandle = osThreadCreate(osThread(RobotUITask), NULL);
 
   /* definition and creation of MoveTask */
-  osThreadDef(MoveTask, StartMoveTask, osPriorityNormal, 0, 256);
+  osThreadDef(MoveTask, StartMoveTask, osPriorityHigh, 0, 512);
   MoveTaskHandle = osThreadCreate(osThread(MoveTask), NULL);
 
   /* definition and creation of DefiantTask */

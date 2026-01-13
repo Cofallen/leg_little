@@ -174,14 +174,16 @@ void Chassis_SendTorque()
 }
 
 // 决定输出力矩，选择
+#define RATIO 1.0f
+
 void Chassis_GetTorque(MOTOR_Typedef *motor, Leg_Typedef *left, Leg_Typedef *right, DBUS_Typedef *dbus)
 {
-  left->torque_send.T1  = -left->LQR.torque_setT[0];
-  left->torque_send.T2  = -left->LQR.torque_setT[1];
-  left->torque_send.Tw  =  left->LQR.torque_setW;
-  right->torque_send.T1 =  right->LQR.torque_setT[0];
-  right->torque_send.T2 =  right->LQR.torque_setT[1];
-  right->torque_send.Tw = -right->LQR.torque_setW;
+  left->torque_send.T1  = -left->LQR.torque_setT[0] * RATIO;
+  left->torque_send.T2  = -left->LQR.torque_setT[1] * RATIO;
+  left->torque_send.Tw  =  left->LQR.torque_setW * RATIO;
+  right->torque_send.T1 =  right->LQR.torque_setT[0] * RATIO;
+  right->torque_send.T2 =  right->LQR.torque_setT[1] * RATIO;
+  right->torque_send.Tw = -right->LQR.torque_setW * RATIO;
 
   if (dbus->Remote.S2_u8 == 1)    // 离线
   {

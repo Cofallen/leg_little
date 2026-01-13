@@ -88,7 +88,7 @@ void StartMoveTask(void const * argument)
     portTickType currentTimeMove;
     currentTimeMove = xTaskGetTickCount();
 
-    osDelay(10);
+    osDelay(1000);
     ChassisL_Init(&ALL_MOTOR, &Leg_l);
     ChassisR_Init(&ALL_MOTOR, &Leg_r);
     Vmc_Init(&Leg_l, 0.08f);

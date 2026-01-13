@@ -120,8 +120,8 @@ def get_k(leg_length):
     B_num = np.array(B_sym.subs(eq_point)).astype(np.float64)
 
     # 8. LQR 求解
-    Q = np.diag([6000, 1, 300, 1, 6000, 1])
-    R_mat = np.diag([30, 1]) 
+    Q = np.diag([2000, 1, 1000, 1, 6000, 1])
+    R_mat = np.diag([500, 200]) 
     try:
         P_sol = scipy.linalg.solve_continuous_are(A_num, B_num, Q, R_mat)
         K = np.linalg.inv(R_mat) @ B_num.T @ P_sol
@@ -191,12 +191,12 @@ def fit_k():
     return (a11, a12, a13, a14, a15, a16, a21, a22, a23, a24, a25, a26)
     
 if __name__ == "__main__":
-    data = get_k(0.08)
-    if data is not None:
-        # 将矩阵展平为一维数组
-        flat_data = np.array(data).flatten()
-        # 格式化为 C 语言数组字符串，保留8位小数
-        c_str = ", ".join([f"{x:.8f}" for x in flat_data])
-        print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
+    # data = get_k(0.08)
+    # if data is not None:
+    #     # 将矩阵展平为一维数组
+    #     flat_data = np.array(data).flatten()
+    #     # 格式化为 C 语言数组字符串，保留8位小数
+    #     c_str = ", ".join([f"{x:.8f}" for x in flat_data])
+    #     print(f"float K[{len(flat_data)}] = {{ {c_str} }};\n")
     # send_k('COM36')
-    # coeffs = fit_k()
+    coeffs = fit_k()
