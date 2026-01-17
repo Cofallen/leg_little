@@ -118,17 +118,17 @@ void StartMoveTask(void const * argument)
         ChassisL_Control(&Leg_l, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         ChassisR_Control(&Leg_r, &WHW_V_DBUS, &IMU_Data, RUI_V_CONTAL.DWT_TIME.Move_Dtime);
         Chassis_GetTorque(&ALL_MOTOR, &Leg_l, &Leg_r, &WHW_V_DBUS);
-        VOFA_justfloat((float)Leg_l.status.stand,
-                        (float)Leg_r.status.stand,
-                       Leg_l.stateSpace.theta,
-                        Leg_r.stateSpace.theta,
-                        Leg_l.LQR.torque_setW,
-                        Leg_r.LQR.torque_setW,
-                        Leg_l.torque_send.T1,
-                        Leg_l.torque_send.T2,
-                        Leg_r.torque_send.T1,
-                        Leg_r.torque_send.T2
-                    );
+        // VOFA_justfloat((float)Leg_l.status.stand,
+        //                 (float)Leg_r.status.stand,
+        //                Leg_l.stateSpace.theta,
+        //                 Leg_r.stateSpace.theta,
+        //                 Leg_l.LQR.torque_setW,
+        //                 Leg_r.LQR.torque_setW,
+        //                 Leg_l.torque_send.T1,
+        //                 Leg_l.torque_send.T2,
+        //                 Leg_r.torque_send.T1,
+        //                 Leg_r.torque_send.T2
+        //             );
 
         // VOFA_justfloat( RUI_V_CONTAL.DWT_TIME.TIM7_Dtime,
         //                  RUI_V_CONTAL.DWT_TIME.Move_Dtime,    
@@ -139,7 +139,11 @@ void StartMoveTask(void const * argument)
         //                 Leg_l.LQR.K[0] * (Leg_l.stateSpace.theta - Leg_l.target.theta),
         //                 Leg_l.LQR.K[1] * (Leg_l.stateSpace.dtheta - Leg_l.target.dtheta),
         //                 0,0);
-
+        VOFA_justfloat( Leg_l.target.s,
+                         Leg_l.target.dot_s,    
+                        Leg_l.target.yaw,
+                        0,0,0,0,0,
+                        0,0);
         osDelay(1);
     }
 }
